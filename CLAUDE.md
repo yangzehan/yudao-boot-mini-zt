@@ -128,6 +128,7 @@ The project includes a code generator in the infra module. Use it to generate CR
 - Multi-tenant data isolation is built-in
 - Entity classes are in `dal/dataobject/` package
 - Mapper interfaces are in `dal/mysql/` package
+- Tenants are enabled by default use mybatis-plus TenantLineHandler @src/main/java/cn/iocoder/yudao/framework/tenant/core/db/TenantDatabaseInterceptor.java
 
 ### API Development
 
