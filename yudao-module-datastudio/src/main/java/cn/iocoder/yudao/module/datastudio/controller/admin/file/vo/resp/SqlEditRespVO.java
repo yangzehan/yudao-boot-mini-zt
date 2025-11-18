@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 文件管理响应VO
+ * SQL 编辑器响应VO
  *
  * @author 芋道源码
  */
 @Data
-@Schema(name = "文件管理响应VO")
-public class FileManageRespVO {
+@Schema(name = "SQL 编辑器响应VO")
+public class SqlEditRespVO {
 
     @Schema(name = "文件ID", example = "1")
     private Long id;
@@ -49,6 +49,6 @@ public class FileManageRespVO {
     private LocalDateTime updateTime;
 
     @Schema(name = "子文件列表（用于树形结构）")
-    private List<FileManageRespVO> children;
+    private List<SqlEditRespVO> children;
 
 }

@@ -1,20 +1,20 @@
 package cn.iocoder.yudao.module.datastudio.service.file;
 
-import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.FileManageListReqVO;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.FileManageSaveReqVO;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.FileManageRespVO;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.FileManageDO;
+
+
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.SqlEditListReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditRespVO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 
 import java.util.List;
 
 /**
- * 文件管理 Service 接口
+ * SQL 编辑器 Service 接口
  *
  * @author 芋道源码
  */
-public interface FileManageService {
+public interface SqlEditService {
 
     /**
      * 创建文件/文件夹
@@ -22,14 +22,14 @@ public interface FileManageService {
      * @param createReqVO 创建请求VO
      * @return 文件ID
      */
-    Long createFile(FileManageSaveReqVO createReqVO);
+    Long createFile(SqlEditSaveReqVO createReqVO);
 
     /**
      * 更新文件/文件夹
      *
      * @param updateReqVO 更新请求VO
      */
-    void updateFile(FileManageSaveReqVO updateReqVO);
+    void updateFile(SqlEditSaveReqVO updateReqVO);
 
     /**
      * 删除文件/文件夹
@@ -51,7 +51,7 @@ public interface FileManageService {
      * @param id 文件ID
      * @return 文件信息
      */
-    FileManageDO getFile(Long id);
+    SqlEditDO getFile(Long id);
 
     /**
      * 获取文件列表
@@ -59,14 +59,14 @@ public interface FileManageService {
      * @param reqVO 筛选条件请求VO
      * @return 文件列表
      */
-    List<FileManageDO> getFileList(FileManageListReqVO reqVO);
+    List<SqlEditDO> getFileList(SqlEditListReqVO reqVO);
 
     /**
      * 获取树形文件结构
      *
      * @return 树形文件结构
      */
-    List<FileManageRespVO> getFileTree();
+    List<SqlEditRespVO> getFileTree();
 
     /**
      * 获取指定父目录下的文件列表
@@ -74,7 +74,7 @@ public interface FileManageService {
      * @param parentId 父ID
      * @return 文件列表
      */
-    List<FileManageRespVO> getFilesByParentId(Long parentId);
+    List<SqlEditRespVO> getFilesByParentId(Long parentId);
 
     /**
      * 搜索文件
@@ -82,7 +82,7 @@ public interface FileManageService {
      * @param keyword 关键词
      * @return 文件列表
      */
-    List<FileManageRespVO> searchFiles(String keyword);
+    List<SqlEditRespVO> searchFiles(String keyword);
 
     /**
      * 移动文件

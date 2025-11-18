@@ -9,14 +9,14 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
- * 文件管理保存请求VO
+ * SQL 编辑器保存请求VO
  *
  * @author 芋道源码
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Schema(name = "文件管理保存请求VO")
-public class FileManageSaveReqVO {
+@Schema(name = "SQL 编辑器保存请求VO")
+public class SqlEditSaveReqVO {
 
     @Schema(name = "文件ID", example = "1")
     private Long id;

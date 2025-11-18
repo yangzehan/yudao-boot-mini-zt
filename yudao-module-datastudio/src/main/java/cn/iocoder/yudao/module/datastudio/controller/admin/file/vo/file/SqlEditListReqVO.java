@@ -6,13 +6,13 @@ import lombok.Data;
 import javax.validation.constraints.Size;
 
 /**
- * 文件管理列表查询请求VO
+ * SQL 编辑器列表查询请求VO
  *
  * @author 芋道源码
  */
 @Data
-@Schema(name = "文件管理列表查询请求VO")
-public class FileManageListReqVO {
+@Schema(name = "SQL 编辑器列表查询请求VO")
+public class SqlEditListReqVO {
 
     @Schema(name = "搜索关键词")
     @Size(max = 100, message = "关键词长度不能超过100个字符")

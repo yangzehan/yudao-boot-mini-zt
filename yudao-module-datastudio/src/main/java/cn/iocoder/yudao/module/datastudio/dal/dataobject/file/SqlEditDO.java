@@ -8,15 +8,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 文件管理表
+ * SQL 编辑器文件表
  *
  * @author 芋道源码
  */
-@TableName("data_studio_file_manage")
-@KeySequence("data_studio_file_manage_seq")
+@TableName("data_studio_sql_edit")
+@KeySequence("data_studio_sql_edit_seq")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class FileManageDO extends TenantBaseDO {
+public class SqlEditDO extends TenantBaseDO {
 
     /**
      * 文件ID
