@@ -3,10 +3,15 @@ package cn.iocoder.yudao.module.datastudio.service.file;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.SqlEditListReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditDataRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditRespVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +30,12 @@ public class SqlEditServiceImpl implements SqlEditService {
 
     @Resource
     private SqlEditMapper sqlEditMapper;
+
+    @Resource
+    private SqlEditConfigMapper sqlEditConfigMapper;
+
+    @Resource
+    private SqlEditVersionMapper sqlEditVersionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -266,18 +277,6 @@ public class SqlEditServiceImpl implements SqlEditService {
             file.setFileSize((long) saveReqVO.getContent().getBytes().length);
         }
 
-        // 保存配置信息（序列化为JSON）
-        if (saveReqVO.getConfig() != null) {
-            try {
-                // 使用Jackson将FlinkConfig序列化为JSON字符串
-                com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                String configJson = objectMapper.writeValueAsString(saveReqVO.getConfig());
-                file.setConfig(configJson);
-            } catch (Exception e) {
-                throw new RuntimeException("配置信息序列化失败", e);
-            }
-        }
-
         sqlEditMapper.updateById(file);
     }
 
@@ -295,6 +294,121 @@ public class SqlEditServiceImpl implements SqlEditService {
         }
 
         return file.getContent();
+    }
+
+    @Override
+    public SqlEditDataRespVO getFileData(Long id) {
+        SqlEditDO file = sqlEditMapper.selectById(id);
+        if (file == null) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+
+        // 验证文件属于当前租户
+        Long tenantId = TenantContextHolder.getTenantId();
+        if (!tenantId.equals(file.getTenantId())) {
+            throw new IllegalArgumentException("无权访问该文件");
+        }
+
+        // 先转换基本信息
+        SqlEditDataRespVO dataRespVO = BeanUtils.toBean(file, SqlEditDataRespVO.class);
+
+        // 获取配置信息
+        FlinkConfig config = getFileConfig(id);
+        dataRespVO.setConfig(config);
+
+        return dataRespVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFileData(SqlEditDataSaveReqVO saveReqVO) {
+        SqlEditDO file = sqlEditMapper.selectById(saveReqVO.getId());
+        if (file == null) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+
+        // 验证文件属于当前租户
+        Long tenantId = TenantContextHolder.getTenantId();
+        if (!tenantId.equals(file.getTenantId())) {
+            throw new IllegalArgumentException("无权操作该文件");
+        }
+
+        if ("folder".equals(file.getType())) {
+            throw new IllegalArgumentException("文件夹没有内容");
+        }
+
+        // 检查内容是否有变化
+        String oldContent = file.getContent();
+        String newContent = saveReqVO.getContent();
+
+        // 保存文件内容
+        if (saveReqVO.getContent() != null) {
+            file.setContent(saveReqVO.getContent());
+            file.setFileSize((long) saveReqVO.getContent().getBytes().length);
+        }
+        sqlEditMapper.updateById(file);
+
+        // 保存配置信息
+        if (saveReqVO.getConfig() != null) {
+            saveFileConfig(saveReqVO.getId(), saveReqVO.getConfig());
+        } else {
+            // 如果配置为空，删除配置记录
+            deleteFileConfig(saveReqVO.getId());
+        }
+
+        // 如果内容有变化，自动创建版本
+        if (newContent != null && !newContent.equals(oldContent)) {
+            // 获取当前文件配置
+            FlinkConfig currentConfig = saveReqVO.getConfig();
+            if (currentConfig == null) {
+                currentConfig = getFileConfig(saveReqVO.getId());
+            }
+
+            // 创建版本记录
+            SqlEditVersionDO version = new SqlEditVersionDO();
+            version.setSqlEditId(saveReqVO.getId());
+            version.setContent(newContent);
+            version.setConfig(currentConfig);
+            version.setVersionType("auto");
+            version.setRemark("自动保存版本");
+
+            // 获取当前最新版本号并递增
+            Long currentVersionNumber = sqlEditVersionMapper.selectMaxVersionNumberBySqlEditId(saveReqVO.getId());
+            version.setVersionNumber(currentVersionNumber + 1);
+
+            // 保存版本
+            sqlEditVersionMapper.insert(version);
+        }
+    }
+
+    @Override
+    public FlinkConfig getFileConfig(Long sqlEditId) {
+
+        SqlEditConfigDO configDO = sqlEditConfigMapper.selectBySqlEditId(sqlEditId);
+        if (configDO == null || Objects.isNull(configDO.getConfig())) {
+            return null;
+        }
+        return configDO.getConfig();
+
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFileConfig(Long sqlEditId, FlinkConfig config) {
+        // 先删除旧配置
+        sqlEditConfigMapper.deleteBySqlEditId(sqlEditId);
+
+        // 保存新配置
+        SqlEditConfigDO configDO = new SqlEditConfigDO();
+        configDO.setSqlEditId(sqlEditId);
+        configDO.setConfig(config);
+        sqlEditConfigMapper.insert(configDO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteFileConfig(Long sqlEditId) {
+        sqlEditConfigMapper.deleteBySqlEditId(sqlEditId);
     }
 
     /**

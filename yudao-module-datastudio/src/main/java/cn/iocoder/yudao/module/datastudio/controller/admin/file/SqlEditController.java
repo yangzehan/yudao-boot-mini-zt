@@ -3,7 +3,9 @@ package cn.iocoder.yudao.module.datastudio.controller.admin.file;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.SqlEditListReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditDataRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditRespVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.service.file.SqlEditService;
@@ -136,7 +138,7 @@ public class SqlEditController {
     @PostMapping("/save-data")
     @Operation(summary = "保存文件数据（内容和配置）")
     @PreAuthorize("@ss.hasPermission('datastudio:file:update')")
-    public CommonResult<Boolean> saveFileData(@Valid @RequestBody SqlEditSaveReqVO saveReqVO) {
+    public CommonResult<Boolean> saveFileData(@Valid @RequestBody SqlEditDataSaveReqVO saveReqVO) {
         sqlEditService.saveFileData(saveReqVO);
         return success(true);
     }
@@ -147,6 +149,15 @@ public class SqlEditController {
     public CommonResult<String> getFileContent(@RequestParam("id") Long id) {
         String content = sqlEditService.getFileContent(id);
         return success(content);
+    }
+
+    @GetMapping("/get-data")
+    @Operation(summary = "获取文件数据（内容和配置）")
+    @Parameter(name = "id", description = "文件ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('datastudio:file:query')")
+    public CommonResult<SqlEditDataRespVO> getFileData(@RequestParam("id") Long id) {
+        SqlEditDataRespVO data = sqlEditService.getFileData(id);
+        return success(data);
     }
 
 }

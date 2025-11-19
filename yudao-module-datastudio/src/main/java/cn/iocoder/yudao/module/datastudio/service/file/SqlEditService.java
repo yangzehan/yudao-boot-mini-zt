@@ -1,13 +1,15 @@
 package cn.iocoder.yudao.module.datastudio.service.file;
 
-
-
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.SqlEditListReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditDataRespVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.resp.SqlEditRespVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * SQL 编辑器 Service 接口
@@ -124,5 +126,43 @@ public interface SqlEditService {
      * @return 文件内容
      */
     String getFileContent(Long id);
+
+    /**
+     * 获取文件数据（内容和配置）
+     *
+     * @param id 文件ID
+     * @return 文件数据
+     */
+    SqlEditDataRespVO getFileData(Long id);
+
+    /**
+     * 保存文件数据（内容和配置）
+     *
+     * @param saveReqVO 文件数据保存请求
+     */
+    void saveFileData(SqlEditDataSaveReqVO saveReqVO);
+
+    /**
+     * 获取文件配置
+     *
+     * @param sqlEditId SQL编辑器文件ID
+     * @return 文件配置
+     */
+    FlinkConfig getFileConfig(Long sqlEditId);
+
+    /**
+     * 保存文件配置
+     *
+     * @param sqlEditId SQL编辑器文件ID
+     * @param config    Flink配置
+     */
+    void saveFileConfig(Long sqlEditId, FlinkConfig config);
+
+    /**
+     * 删除文件配置
+     *
+     * @param sqlEditId SQL编辑器文件ID
+     */
+    void deleteFileConfig(Long sqlEditId);
 
 }

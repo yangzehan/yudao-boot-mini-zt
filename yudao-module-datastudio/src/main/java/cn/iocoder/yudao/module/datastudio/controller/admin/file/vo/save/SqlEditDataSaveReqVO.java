@@ -1,22 +1,21 @@
 package cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save;
 
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
- * SQL 编辑器保存请求VO
+ * SQL编辑器数据保存请求VO（包含文件信息和配置信息）
  *
  * @author 芋道源码
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
-@Schema(name = "SQL 编辑器保存请求VO")
-public class SqlEditSaveReqVO {
+@Schema(name = "SQL编辑器数据保存请求VO")
+public class SqlEditDataSaveReqVO {
 
     @Schema(name = "文件ID", example = "1")
     private Long id;
@@ -46,5 +45,8 @@ public class SqlEditSaveReqVO {
 
     @Schema(name = "状态：0-禁用，1-启用", example = "1")
     private Integer status;
+
+    @Schema(name = "Flink配置信息", description = "SQL任务的执行配置")
+    private FlinkConfig config;
 
 }
