@@ -133,6 +133,14 @@ public class SqlEditController {
         return success(true);
     }
 
+    @PostMapping("/save-data")
+    @Operation(summary = "保存文件数据（内容和配置）")
+    @PreAuthorize("@ss.hasPermission('datastudio:file:update')")
+    public CommonResult<Boolean> saveFileData(@Valid @RequestBody SqlEditSaveReqVO saveReqVO) {
+        sqlEditService.saveFileData(saveReqVO);
+        return success(true);
+    }
+
     @GetMapping("/get-content")
     @Operation(summary = "获取文件内容")
     @PreAuthorize("@ss.hasPermission('datastudio:file:query')")

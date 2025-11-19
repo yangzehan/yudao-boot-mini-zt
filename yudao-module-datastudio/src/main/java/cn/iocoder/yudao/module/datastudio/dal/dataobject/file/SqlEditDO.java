@@ -52,6 +52,12 @@ public class SqlEditDO extends TenantBaseDO {
     private String content;
 
     /**
+     * Flink配置信息（JSON格式）
+     * 存储SQL任务的执行配置，如并行度、Flink版本等
+     */
+    private String config;
+
+    /**
      * 显示顺序
      */
     private Integer sort;

@@ -105,8 +105,17 @@ public interface SqlEditService {
      *
      * @param id 文件ID
      * @param content 文件内容
+     * @deprecated 使用 saveFileData 代替
      */
+    @Deprecated
     void saveFileContent(Long id, String content);
+
+    /**
+     * 保存文件数据（内容和配置）
+     *
+     * @param saveReqVO 文件数据
+     */
+    void saveFileData(SqlEditSaveReqVO saveReqVO);
 
     /**
      * 获取文件内容

@@ -243,6 +243,45 @@ public class SqlEditServiceImpl implements SqlEditService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFileData(SqlEditSaveReqVO saveReqVO) {
+        SqlEditDO file = sqlEditMapper.selectById(saveReqVO.getId());
+        if (file == null) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+
+        // 验证文件属于当前租户
+        Long tenantId = TenantContextHolder.getTenantId();
+        if (!tenantId.equals(file.getTenantId())) {
+            throw new IllegalArgumentException("无权操作该文件");
+        }
+
+        if ("folder".equals(file.getType())) {
+            throw new IllegalArgumentException("文件夹没有内容");
+        }
+
+        // 保存文件内容
+        if (saveReqVO.getContent() != null) {
+            file.setContent(saveReqVO.getContent());
+            file.setFileSize((long) saveReqVO.getContent().getBytes().length);
+        }
+
+        // 保存配置信息（序列化为JSON）
+        if (saveReqVO.getConfig() != null) {
+            try {
+                // 使用Jackson将FlinkConfig序列化为JSON字符串
+                com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                String configJson = objectMapper.writeValueAsString(saveReqVO.getConfig());
+                file.setConfig(configJson);
+            } catch (Exception e) {
+                throw new RuntimeException("配置信息序列化失败", e);
+            }
+        }
+
+        sqlEditMapper.updateById(file);
+    }
+
+    @Override
     public String getFileContent(Long id) {
         SqlEditDO file = sqlEditMapper.selectById(id);
         if (file == null) {

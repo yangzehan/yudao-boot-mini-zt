@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `data_studio_sql_edit` (
     `content` longtext COMMENT '文件内容（仅对文件有效，文件夹为空）',
     `sort` int NOT NULL DEFAULT '0' COMMENT '显示顺序',
     `file_size` bigint DEFAULT '0' COMMENT '文件大小（字节）',
+    `config` longtext COMMENT '配置信息（JSON格式）',
     `status` int NOT NULL DEFAULT '1' COMMENT '状态：0-禁用，1-启用',
     `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
     `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',

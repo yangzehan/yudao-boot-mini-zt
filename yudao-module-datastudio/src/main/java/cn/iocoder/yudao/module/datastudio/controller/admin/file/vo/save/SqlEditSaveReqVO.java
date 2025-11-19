@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save;
 
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,9 @@ public class SqlEditSaveReqVO {
 
     @Schema(name = "文件内容")
     private String content;
+
+    @Schema(name = "Flink配置信息", description = "使用JSON格式保存Flink配置项")
+    private FlinkConfig config;
 
     @Schema(name = "显示顺序", example = "0")
     private Integer sort;
