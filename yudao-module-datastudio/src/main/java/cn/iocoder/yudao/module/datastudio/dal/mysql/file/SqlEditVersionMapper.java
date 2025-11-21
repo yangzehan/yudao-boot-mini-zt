@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.datastudio.dal.mysql.file;
 
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
@@ -20,9 +21,13 @@ public interface SqlEditVersionMapper extends BaseMapperX<SqlEditVersionDO> {
      * 根据文件ID获取版本列表（分页）
      */
     default PageResult<SqlEditVersionDO> selectPageBySqlEditId(Long sqlEditId, Integer pageNo, Integer pageSize) {
-        return selectPage(new LambdaQueryWrapperX<SqlEditVersionDO>()
+
+        PageParam pageParam = new PageParam();
+        pageParam.setPageNo(pageNo);
+        pageParam.setPageSize(pageSize);
+        return selectPage(pageParam,new LambdaQueryWrapperX<SqlEditVersionDO>()
                 .eq(SqlEditVersionDO::getSqlEditId, sqlEditId)
-                .orderByDesc(SqlEditVersionDO::getVersionNumber), pageNo, pageSize);
+                .orderByDesc(SqlEditVersionDO::getVersionNumber));
     }
 
     /**

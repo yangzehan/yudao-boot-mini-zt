@@ -1,7 +1,8 @@
 package cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.version;
 
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.FlinkConfig;
+
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

@@ -1,10 +1,9 @@
 package cn.iocoder.yudao.module.datastudio.service.file;
 
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.version.*;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.FlinkConfig;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,7 +24,8 @@ public interface SqlEditVersionService {
      * @param versionType 版本类型（manual/auto）
      * @return 版本ID
      */
-    Long createVersion(Long sqlEditId, String content, FlinkConfig config, String remark, String versionType);
+    @Transactional(rollbackFor = Exception.class)
+    Long createVersion(Long sqlEditId, String content, cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig config, String remark, String versionType);
 
     /**
      * 获取版本列表（分页）

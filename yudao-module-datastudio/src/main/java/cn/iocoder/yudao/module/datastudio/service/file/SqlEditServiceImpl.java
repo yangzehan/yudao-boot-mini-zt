@@ -9,8 +9,10 @@ import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditD
 import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditVersionMapper;
 import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * SQL 编辑器 Service 实现
@@ -36,6 +41,9 @@ public class SqlEditServiceImpl implements SqlEditService {
 
     @Resource
     private SqlEditVersionMapper sqlEditVersionMapper;
+
+    @Resource
+    private SqlEditVersionService sqlEditVersionService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -378,6 +386,10 @@ public class SqlEditServiceImpl implements SqlEditService {
 
             // 保存版本
             sqlEditVersionMapper.insert(version);
+
+            // 检查版本数量，如果超过7个则删除最旧的版本
+            sqlEditVersionService.deleteOldVersions(saveReqVO.getId(), 7);
+
         }
     }
 

@@ -1,17 +1,17 @@
 package cn.iocoder.yudao.module.datastudio.service.file;
 
+import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.ServiceException;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
-import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
-import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.version.*;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.FlinkConfig;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditVersionMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,15 +30,18 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
     private SqlEditVersionMapper versionMapper;
 
     @Resource
+    private SqlEditConfigMapper sqlEditConfigMapper;
+
+    @Resource
     private SqlEditMapper sqlEditMapper;
 
-    @Override
     @Transactional(rollbackFor = Exception.class)
+    @Override
     public Long createVersion(Long sqlEditId, String content, FlinkConfig config, String remark, String versionType) {
         // 1. 验证文件是否存在
         SqlEditDO sqlEdit = sqlEditMapper.selectById(sqlEditId);
         if (sqlEdit == null) {
-            throw new ServiceException("文件不存在");
+            throw new ServiceException(new ErrorCode(9999,"文件不存在"));
         }
 
         // 2. 获取当前最新版本号
@@ -57,6 +60,9 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
         // 保存版本
         versionMapper.insert(version);
 
+        // 4. 检查版本数量，如果超过7个则删除最旧的版本
+        deleteOldVersions(sqlEditId, 7);
+
         return version.getId();
     }
 
@@ -74,7 +80,7 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
     public SqlEditVersionDO getVersionDetail(Long versionId) {
         SqlEditVersionDO version = versionMapper.selectById(versionId);
         if (version == null) {
-            throw new ServiceException("版本不存在");
+            throw new ServiceException(new ErrorCode(9999,"版本不存在"));
         }
         return version;
     }
@@ -85,13 +91,13 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
         // 1. 获取版本信息
         SqlEditVersionDO version = versionMapper.selectById(versionId);
         if (version == null) {
-            throw new ServiceException("版本不存在");
+            throw new ServiceException(new ErrorCode(9999,"版本不存在"));
         }
 
         // 2. 获取当前文件信息
         SqlEditDO sqlEdit = sqlEditMapper.selectById(version.getSqlEditId());
         if (sqlEdit == null) {
-            throw new ServiceException("文件不存在");
+            throw new ServiceException(new ErrorCode(9999,"文件不存在"));
         }
 
         // 3. 更新文件内容
@@ -104,7 +110,6 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
             configDO.setSqlEditId(version.getSqlEditId());
             configDO.setConfig(version.getConfig());
             // 先删除旧配置
-            SqlEditConfigMapper sqlEditConfigMapper = new SqlEditConfigMapper();
             sqlEditConfigMapper.deleteBySqlEditId(version.getSqlEditId());
             // 保存新配置
             sqlEditConfigMapper.insert(configDO);
@@ -123,7 +128,7 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
         // 1. 验证版本是否存在
         SqlEditVersionDO version = versionMapper.selectById(versionId);
         if (version == null) {
-            throw new ServiceException("版本不存在");
+            throw new ServiceException(new ErrorCode(9999,"版本不存在"));
         }
 
         // 2. 删除版本（逻辑删除）
@@ -158,10 +163,6 @@ public class SqlEditVersionServiceImpl implements SqlEditVersionService {
         return versionsToDelete.size();
     }
 
-    /**
-     * 保存文件配置
-     */
-    @Resource
-    private SqlEditConfigMapper sqlEditConfigMapper;
+
 
 }

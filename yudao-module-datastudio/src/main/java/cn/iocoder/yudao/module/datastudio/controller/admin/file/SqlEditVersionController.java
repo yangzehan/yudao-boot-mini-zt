@@ -36,7 +36,7 @@ public class SqlEditVersionController {
         List<SqlEditVersionRespVO> voList = pageResult.getList().stream()
                 .map(SqlEditVersionRespVO::of)
                 .collect(Collectors.toList());
-        return CommonResult.success(PageResult.of(voList, pageResult.getTotal()));
+        return CommonResult.success(new PageResult<>(voList, pageResult.getTotal()));
     }
 
     @Operation(summary = "获取版本详情")
@@ -58,6 +58,19 @@ public class SqlEditVersionController {
     public CommonResult<Boolean> deleteVersion(@PathVariable Long id) {
         Boolean result = versionService.deleteVersion(id);
         return CommonResult.success(result);
+    }
+
+    @Operation(summary = "创建版本")
+    @PostMapping("/create")
+    public CommonResult<Long> createVersion(@Valid @RequestBody SqlEditVersionCreateReqVO reqVO) {
+        Long versionId = versionService.createVersion(
+            reqVO.getSqlEditId(),
+            reqVO.getContent(),
+            reqVO.getConfig(),
+            reqVO.getRemark(),
+            reqVO.getVersionType()
+        );
+        return CommonResult.success(versionId);
     }
 
 }
