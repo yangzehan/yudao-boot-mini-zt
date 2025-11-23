@@ -5,8 +5,13 @@ import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionMapper;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionConfigMapper;
+import cn.iocoder.yudao.module.datastudio.service.dataIngestionVersion.DataIngestionVersionService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +30,12 @@ public class DataIngestionServiceImpl implements DataIngestionService {
 
     @Resource
     private DataIngestionMapper dataIngestionMapper;
+
+    @Resource
+    private DataIngestionVersionService dataIngestionVersionService;
+
+    @Resource
+    private DataIngestionConfigMapper dataIngestionConfigMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -256,6 +267,110 @@ public class DataIngestionServiceImpl implements DataIngestionService {
         }
 
         return file.getContent();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFileData(DataIngestionDataSaveReqVO saveReqVO) {
+        DataIngestionDO file = dataIngestionMapper.selectById(saveReqVO.getId());
+        if (file == null) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+
+        // 验证文件属于当前租户
+        Long tenantId = TenantContextHolder.getTenantId();
+        if (!tenantId.equals(file.getTenantId())) {
+            throw new IllegalArgumentException("无权操作该文件");
+        }
+
+        if ("folder".equals(file.getType())) {
+            throw new IllegalArgumentException("文件夹没有内容");
+        }
+
+        // 检查内容是否有变化
+        String oldContent = file.getContent();
+        String newContent = saveReqVO.getContent();
+
+        // 保存文件内容
+        if (saveReqVO.getContent() != null) {
+            file.setContent(saveReqVO.getContent());
+            file.setFileSize((long) saveReqVO.getContent().getBytes().length);
+        }
+        dataIngestionMapper.updateById(file);
+
+        // 保存配置信息
+        if (saveReqVO.getConfig() != null) {
+            saveFileConfig(saveReqVO.getId(), saveReqVO.getConfig());
+        } else {
+            // 如果配置为空，删除配置记录
+            deleteFileConfig(saveReqVO.getId());
+        }
+
+        // 如果内容有变化，自动创建版本
+        if (newContent != null && !newContent.equals(oldContent)) {
+            // 获取当前文件配置
+            DataIngestionVersionDO.ConfigInfo currentConfig = saveReqVO.getConfig();
+            if (currentConfig == null) {
+                currentConfig = getFileConfig(saveReqVO.getId());
+            }
+
+            // 创建版本记录
+            dataIngestionVersionService.createVersion(
+                    saveReqVO.getId(),
+                    newContent,
+                    currentConfig,
+                    "自动保存版本",
+                    "auto"
+            );
+        }
+    }
+
+    /**
+     * 获取文件配置信息
+     *
+     * @param dataIngestionId 数据摄取文件ID
+     * @return 配置信息
+     */
+    public DataIngestionVersionDO.ConfigInfo getFileConfig(Long dataIngestionId) {
+        DataIngestionConfigDO configDO = dataIngestionConfigMapper.selectByDataIngestionId(dataIngestionId);
+        if (configDO == null) {
+            return null;
+        }
+        return configDO.getConfig();
+    }
+
+    /**
+     * 保存文件配置信息
+     *
+     * @param dataIngestionId 数据摄取文件ID
+     * @param config 配置信息
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFileConfig(Long dataIngestionId, DataIngestionVersionDO.ConfigInfo config) {
+        // 查询是否已存在配置
+        DataIngestionConfigDO existingConfig = dataIngestionConfigMapper.selectByDataIngestionId(dataIngestionId);
+
+        if (existingConfig != null) {
+            // 存在则更新
+            existingConfig.setConfig(config);
+            dataIngestionConfigMapper.updateById(existingConfig);
+        } else {
+            // 不存在则插入
+            DataIngestionConfigDO configDO = new DataIngestionConfigDO();
+            configDO.setDataIngestionId(dataIngestionId);
+            configDO.setConfig(config);
+            dataIngestionConfigMapper.insert(configDO);
+        }
+    }
+
+    /**
+     * 删除文件配置信息
+     *
+     * @param dataIngestionId 数据摄取文件ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteFileConfig(Long dataIngestionId) {
+        dataIngestionConfigMapper.deleteByDataIngestionId(dataIngestionId);
     }
 
     /**

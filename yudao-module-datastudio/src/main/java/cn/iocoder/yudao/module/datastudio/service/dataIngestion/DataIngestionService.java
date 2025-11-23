@@ -4,6 +4,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
 
 import java.util.List;
@@ -114,5 +115,12 @@ public interface DataIngestionService {
      * @return 文件内容
      */
     String getFileContent(Long id);
+
+    /**
+     * 保存文件数据和配置（同时创建版本）
+     *
+     * @param saveReqVO 保存信息
+     */
+    void saveFileData(DataIngestionDataSaveReqVO saveReqVO);
 
 }

@@ -5,6 +5,7 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
 import cn.iocoder.yudao.module.datastudio.service.dataIngestion.DataIngestionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -130,6 +131,14 @@ public class DataIngestionController {
     public CommonResult<Boolean> saveFileContent(@RequestParam("id") Long id,
                                                 @RequestParam("content") String content) {
         dataIngestionService.saveFileContent(id, content);
+        return success(true);
+    }
+
+    @PostMapping("/save-data")
+    @Operation(summary = "保存文件数据和配置（同时创建版本）")
+    @PreAuthorize("@ss.hasPermission('datastudio:file:update')")
+    public CommonResult<Boolean> saveFileData(@Valid @RequestBody DataIngestionDataSaveReqVO saveReqVO) {
+        dataIngestionService.saveFileData(saveReqVO);
         return success(true);
     }
 
