@@ -364,8 +364,7 @@ public class SqlEditServiceImpl implements SqlEditService {
             deleteFileConfig(saveReqVO.getId());
         }
 
-        // 如果内容有变化，自动创建版本
-        if (newContent != null && !newContent.equals(oldContent)) {
+
             // 获取当前文件配置
             FlinkConfig currentConfig = saveReqVO.getConfig();
             if (currentConfig == null) {
@@ -390,7 +389,6 @@ public class SqlEditServiceImpl implements SqlEditService {
             // 检查版本数量，如果超过7个则删除最旧的版本
             sqlEditVersionService.deleteOldVersions(saveReqVO.getId(), 7);
 
-        }
     }
 
     @Override

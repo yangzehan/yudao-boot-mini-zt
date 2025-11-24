@@ -4,6 +4,7 @@ import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionDataRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
@@ -148,6 +149,15 @@ public class DataIngestionController {
     public CommonResult<String> getFileContent(@RequestParam("id") Long id) {
         String content = dataIngestionService.getFileContent(id);
         return success(content);
+    }
+
+    @GetMapping("/get-data")
+    @Operation(summary = "获取文件数据（内容和配置）")
+    @Parameter(name = "id", description = "文件ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('datastudio:file:query')")
+    public CommonResult<DataIngestionDataRespVO> getFileData(@RequestParam("id") Long id) {
+        DataIngestionDataRespVO data = dataIngestionService.getFileData(id);
+        return success(data);
     }
 
 }

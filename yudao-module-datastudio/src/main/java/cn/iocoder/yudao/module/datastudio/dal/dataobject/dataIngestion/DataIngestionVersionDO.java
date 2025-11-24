@@ -1,15 +1,14 @@
 package cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion;
 
 import cn.iocoder.yudao.framework.tenant.core.db.TenantBaseDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.handler.FlinkConfigTypeHandler;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.AbstractJsonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.lang.reflect.Field;
 
 /**
  * 数据摄取版本 DO
@@ -46,8 +45,8 @@ public class DataIngestionVersionDO extends TenantBaseDO {
     /**
      * 配置信息快照（JSON格式）
      */
-    @TableField(typeHandler = ConfigTypeHandler.class)
-    private ConfigInfo config;
+    @TableField(typeHandler = FlinkConfigTypeHandler.class)
+    private FlinkConfig config;
 
     /**
      * 版本备注
@@ -116,33 +115,5 @@ public class DataIngestionVersionDO extends TenantBaseDO {
         private Long checkpointInterval;
     }
 
-    /**
-     * 配置信息类型处理器
-     */
-    public static class ConfigTypeHandler extends AbstractJsonTypeHandler<ConfigInfo> {
 
-        public ConfigTypeHandler(Class<?> type) {
-            super(type);
-        }
-
-        public ConfigTypeHandler(Class<?> type, Field field) {
-            super(type, field);
-        }
-
-        @Override
-        public ConfigInfo parse(String json) {
-            if (json == null || json.trim().isEmpty()) {
-                return null;
-            }
-            return cn.iocoder.yudao.framework.common.util.json.JsonUtils.parseObject(json, ConfigInfo.class);
-        }
-
-        @Override
-        public String toJson(ConfigInfo obj) {
-            if (obj == null) {
-                return null;
-            }
-            return cn.iocoder.yudao.framework.common.util.json.JsonUtils.toJsonString(obj);
-        }
-    }
 }

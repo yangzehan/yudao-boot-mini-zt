@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.datastudio.service.dataIngestionVersion;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public interface DataIngestionVersionService {
      * @return 版本ID
      */
     @Transactional(rollbackFor = Exception.class)
-    Long createVersion(Long dataIngestionId, String content, DataIngestionVersionDO.ConfigInfo config, String remark, String versionType);
+    Long createVersion(Long dataIngestionId, String content, FlinkConfig config, String remark, String versionType);
 
     /**
      * 获取版本列表（分页）

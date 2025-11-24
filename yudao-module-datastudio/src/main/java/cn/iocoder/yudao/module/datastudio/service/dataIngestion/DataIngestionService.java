@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.datastudio.service.dataIngestion;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionDataRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
@@ -122,5 +123,13 @@ public interface DataIngestionService {
      * @param saveReqVO 保存信息
      */
     void saveFileData(DataIngestionDataSaveReqVO saveReqVO);
+
+    /**
+     * 获取文件数据（内容和配置）
+     *
+     * @param id 文件ID
+     * @return 文件数据（包含内容和配置）
+     */
+    DataIngestionDataRespVO getFileData(Long id);
 
 }

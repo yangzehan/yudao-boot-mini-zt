@@ -3,14 +3,15 @@ package cn.iocoder.yudao.module.datastudio.service.dataIngestion;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.file.DataIngestionListReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionDataRespVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.resp.DataIngestionRespVO;
-import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionDataSaveReqVO;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionConfigDO;
-import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionMapper;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionConfigMapper;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionMapper;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import cn.iocoder.yudao.module.datastudio.service.dataIngestionVersion.DataIngestionVersionService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 数据摄取 Service 实现
@@ -300,19 +304,16 @@ public class DataIngestionServiceImpl implements DataIngestionService {
 
         // 保存配置信息
         if (saveReqVO.getConfig() != null) {
+
             saveFileConfig(saveReqVO.getId(), saveReqVO.getConfig());
         } else {
             // 如果配置为空，删除配置记录
             deleteFileConfig(saveReqVO.getId());
         }
 
-        // 如果内容有变化，自动创建版本
-        if (newContent != null && !newContent.equals(oldContent)) {
+
             // 获取当前文件配置
-            DataIngestionVersionDO.ConfigInfo currentConfig = saveReqVO.getConfig();
-            if (currentConfig == null) {
-                currentConfig = getFileConfig(saveReqVO.getId());
-            }
+            FlinkConfig currentConfig = saveReqVO.getConfig();
 
             // 创建版本记录
             dataIngestionVersionService.createVersion(
@@ -322,8 +323,9 @@ public class DataIngestionServiceImpl implements DataIngestionService {
                     "自动保存版本",
                     "auto"
             );
-        }
+
     }
+
 
     /**
      * 获取文件配置信息
@@ -331,7 +333,7 @@ public class DataIngestionServiceImpl implements DataIngestionService {
      * @param dataIngestionId 数据摄取文件ID
      * @return 配置信息
      */
-    public DataIngestionVersionDO.ConfigInfo getFileConfig(Long dataIngestionId) {
+    public FlinkConfig getFileConfig(Long dataIngestionId) {
         DataIngestionConfigDO configDO = dataIngestionConfigMapper.selectByDataIngestionId(dataIngestionId);
         if (configDO == null) {
             return null;
@@ -346,7 +348,7 @@ public class DataIngestionServiceImpl implements DataIngestionService {
      * @param config 配置信息
      */
     @Transactional(rollbackFor = Exception.class)
-    public void saveFileConfig(Long dataIngestionId, DataIngestionVersionDO.ConfigInfo config) {
+    public void saveFileConfig(Long dataIngestionId, FlinkConfig config) {
         // 查询是否已存在配置
         DataIngestionConfigDO existingConfig = dataIngestionConfigMapper.selectByDataIngestionId(dataIngestionId);
 
@@ -371,6 +373,38 @@ public class DataIngestionServiceImpl implements DataIngestionService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteFileConfig(Long dataIngestionId) {
         dataIngestionConfigMapper.deleteByDataIngestionId(dataIngestionId);
+    }
+
+    @Override
+    public DataIngestionDataRespVO getFileData(Long id) {
+        DataIngestionDO file = dataIngestionMapper.selectById(id);
+        if (file == null) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+
+        // 验证文件属于当前租户
+        Long tenantId = TenantContextHolder.getTenantId();
+        if (!tenantId.equals(file.getTenantId())) {
+            throw new IllegalArgumentException("无权访问该文件");
+        }
+
+        // 获取配置信息
+        FlinkConfig configInfo = getFileConfig(id);
+
+        // 转换为响应VO
+        DataIngestionDataRespVO respVO = BeanUtils.toBean(file, DataIngestionDataRespVO.class);
+
+        // 将ConfigInfo转换为FlinkConfig
+        if (configInfo != null) {
+            FlinkConfig flinkConfig = new FlinkConfig();
+            flinkConfig.setExecutionMode(configInfo.getExecutionMode());
+            flinkConfig.setFlinkVersion(configInfo.getFlinkVersion());
+            flinkConfig.setParallelism(configInfo.getParallelism());
+            flinkConfig.setCheckpointInterval(configInfo.getCheckpointInterval());
+            respVO.setConfig(flinkConfig);
+        }
+
+        return respVO;
     }
 
     /**

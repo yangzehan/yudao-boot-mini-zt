@@ -1,6 +1,6 @@
 package cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save;
 
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,7 +48,7 @@ public class DataIngestionDataSaveReqVO {
     @Schema(name = "状态：0-禁用，1-启用", example = "1")
     private Integer status;
 
-    @Schema(name = "配置信息", description = "数据摄取任务的配置信息")
-    private DataIngestionVersionDO.ConfigInfo config;
+    @Schema(name = "Flink配置信息", description = "SQL任务的执行配置")
+    private FlinkConfig config;
 
 }

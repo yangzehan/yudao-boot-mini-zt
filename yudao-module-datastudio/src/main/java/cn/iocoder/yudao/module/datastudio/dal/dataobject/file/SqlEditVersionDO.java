@@ -1,16 +1,14 @@
 package cn.iocoder.yudao.module.datastudio.dal.dataobject.file;
 
 import cn.iocoder.yudao.framework.tenant.core.db.TenantBaseDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.handler.FlinkConfigTypeHandler;
 import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.AbstractJsonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.lang.reflect.Field;
 
 /**
  * SQL编辑器版本 DO
@@ -54,33 +52,4 @@ public class SqlEditVersionDO extends TenantBaseDO {
      */
     private String versionType;
 
-    /**
-     * Flink配置类型处理器
-     */
-    public static class FlinkConfigTypeHandler extends AbstractJsonTypeHandler<FlinkConfig> {
-
-        public FlinkConfigTypeHandler(Class<?> type) {
-            super(type);
-        }
-
-        public FlinkConfigTypeHandler(Class<?> type, Field field) {
-            super(type, field);
-        }
-
-        @Override
-        public FlinkConfig parse(String json) {
-            if (json == null || json.trim().isEmpty()) {
-                return null;
-            }
-            return cn.iocoder.yudao.framework.common.util.json.JsonUtils.parseObject(json, FlinkConfig.class);
-        }
-
-        @Override
-        public String toJson(FlinkConfig obj) {
-            if (obj == null) {
-                return null;
-            }
-            return cn.iocoder.yudao.framework.common.util.json.JsonUtils.toJsonString(obj);
-        }
-    }
 }

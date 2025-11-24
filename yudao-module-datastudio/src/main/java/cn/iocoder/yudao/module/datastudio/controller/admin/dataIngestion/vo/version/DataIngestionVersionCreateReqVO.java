@@ -1,6 +1,6 @@
 package cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.version;
 
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -25,7 +25,7 @@ public class DataIngestionVersionCreateReqVO {
     private String content;
 
     @Schema(name = "配置信息")
-    private DataIngestionVersionDO.ConfigInfo config;
+    private FlinkConfig config;
 
     @Schema(name = "版本备注", example = "这是版本备注")
     private String remark;

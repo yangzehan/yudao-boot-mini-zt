@@ -1,9 +1,10 @@
 package cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion;
 
 import cn.iocoder.yudao.framework.tenant.core.db.TenantBaseDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.handler.FlinkConfigTypeHandler;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,8 +33,7 @@ public class DataIngestionConfigDO extends TenantBaseDO {
     /**
      * 配置信息
      */
-    @TableField(typeHandler = DataIngestionVersionDO.ConfigTypeHandler.class)
-    private DataIngestionVersionDO.ConfigInfo config;
-    
+    @TableField(typeHandler = FlinkConfigTypeHandler.class)
+    private FlinkConfig config;
 
 }

@@ -5,11 +5,11 @@ import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
-import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionVersionDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionVersionMapper;
+import cn.iocoder.yudao.module.datastudio.dto.flink.FlinkConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ public class DataIngestionVersionServiceImpl implements DataIngestionVersionServ
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createVersion(Long dataIngestionId, String content, DataIngestionVersionDO.ConfigInfo config, String remark, String versionType) {
+    public Long createVersion(Long dataIngestionId, String content, FlinkConfig config, String remark, String versionType) {
         // 1. 验证文件是否存在
         DataIngestionDO dataIngestion = dataIngestionMapper.selectById(dataIngestionId);
         if (dataIngestion == null) {
