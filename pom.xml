@@ -8,6 +8,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <modules>
+        <!-- Flink微服务模块 -->
         <module>yudao-dependencies</module>
         <module>yudao-framework</module>
         <!-- Server 主项目 -->
@@ -15,7 +16,10 @@
         <!-- 各种 module 拓展 -->
         <module>yudao-module-system</module>
         <module>yudao-module-infra</module>
-        <module>yudao-module-datastudio</module>
+        <module>yudao-module-data-studio</module>
+        <!-- Flink相关模块 -->
+        <module>yudao-flink-common</module>
+        <module>yudao-flink-118-service</module>
 <!--        <module>yudao-module-member</module>-->
 <!--        <module>yudao-module-bpm</module>-->
 <!--        <module>yudao-module-report</module>-->
@@ -41,6 +45,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <flink.version>1.17.2</flink.version>
         <flatten-maven-plugin.version>1.7.2</flatten-maven-plugin.version>
         <!-- maven-surefire-plugin 暂时无法通过 bom 的依赖读取（兼容老版本 IDEA 2024 及以前版本） -->
         <lombok.version>1.18.38</lombok.version>

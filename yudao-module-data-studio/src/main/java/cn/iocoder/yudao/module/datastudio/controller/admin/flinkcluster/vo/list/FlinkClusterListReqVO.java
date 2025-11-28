@@ -1,0 +1,24 @@
+package cn.iocoder.yudao.module.datastudio.controller.admin.flinkcluster.vo.list;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+/**
+ * Flink 集群配置列表请求 VO
+ *
+ * @author 芋道源码
+ */
+@Data
+@Schema(description = "Flink 集群配置列表请求 VO")
+public class FlinkClusterListReqVO {
+
+    @Schema(description = "集群类型：remote-远程集群，yarn-Flink on Yarn", example = "remote")
+    private String type;
+
+    @Schema(description = "集群状态：running-运行中，stopped-已停止，available-可用，unavailable-不可用", example = "running")
+    private String status;
+
+    @Schema(description = "关键词搜索（搜索name、description）", example = "flink")
+    private String keyword;
+
+}

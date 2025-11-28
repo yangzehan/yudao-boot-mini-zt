@@ -139,12 +139,12 @@ yudao-boot-mini-zt/
 ├── yudao-server/                 # 主应用容器（聚合所有模块）
 ├── yudao-module-system/          # 系统功能模块（用户、角色、权限、字典等）
 ├── yudao-module-infra/           # 基础设施模块（代码生成、文件管理、监控等）
-└── yudao-module-datastudio/      # 数据工作室模块
+└── yudao-module-data-studio/      # 数据工作室模块
 ```
 
 #### 业务模块（当前注释状态）
 
-以下模块在 `pom.xml` 中已被注释，仅保留 `yudao-module-system`、`yudao-module-infra` 和 `yudao-module-datastudio`：
+以下模块在 `pom.xml` 中已被注释，仅保留 `yudao-module-system`、`yudao-module-infra` 和 `yudao-module-data-studio`：
 
 ```xml
 <!-- 可选业务模块（当前被注释） -->

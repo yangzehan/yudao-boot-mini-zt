@@ -14,6 +14,9 @@
     <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
 
     <properties>
+<!--        微服务-->
+        <spring-cloud.alibaba.version>2021.0.6.2</spring-cloud.alibaba.version>
+        <spring.cloud.version>2021.0.9</spring.cloud.version>
         <revision>2025.10-jdk8-SNAPSHOT</revision>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <!-- 统一依赖管理 -->
@@ -83,7 +86,23 @@
     </properties>
 
     <dependencyManagement>
+
+
         <dependencies>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud.alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- 统一依赖管理 -->
             <dependency>
                 <groupId>io.netty</groupId>
