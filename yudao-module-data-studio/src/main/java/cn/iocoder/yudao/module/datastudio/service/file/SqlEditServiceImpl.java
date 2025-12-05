@@ -12,25 +12,27 @@ import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditS
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditVersionMapper;
+import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
 import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory;
+import cn.iocoder.yudao.module.datastudio.service.flinkcluster.impl.FlinkClusterServiceImpl;
 import cn.iocoder.yudao.module.flink.common.api.FlinkApi;
+import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
-import cn.iocoder.yudao.module.flink.common.dto.JobSubmitrespDto;
-import cn.iocoder.yudao.module.flink.common.dto.JobSubmitSqlReqDto;
+import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
+import cn.iocoder.yudao.module.flink.common.dto.JobDeploySqlReqDto;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * SQL 编辑器 Service 实现
@@ -52,6 +54,10 @@ public class SqlEditServiceImpl implements SqlEditService {
 
     @Resource
     private SqlEditVersionService sqlEditVersionService;
+    @Resource
+    private DataJobMapper dataJobMapper;
+    @Autowired
+    private FlinkClusterServiceImpl flinkClusterService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -373,29 +379,29 @@ public class SqlEditServiceImpl implements SqlEditService {
         }
 
 
-            // 获取当前文件配置
-            FlinkConfig currentConfig = saveReqVO.getConfig();
-            if (currentConfig == null) {
-                currentConfig = getFileConfig(saveReqVO.getId());
-            }
+        // 获取当前文件配置
+        FlinkConfig currentConfig = saveReqVO.getConfig();
+        if (currentConfig == null) {
+            currentConfig = getFileConfig(saveReqVO.getId());
+        }
 
-            // 创建版本记录
-            SqlEditVersionDO version = new SqlEditVersionDO();
-            version.setSqlEditId(saveReqVO.getId());
-            version.setContent(newContent);
-            version.setConfig(currentConfig);
-            version.setVersionType("auto");
-            version.setRemark("自动保存版本");
+        // 创建版本记录
+        SqlEditVersionDO version = new SqlEditVersionDO();
+        version.setSqlEditId(saveReqVO.getId());
+        version.setContent(newContent);
+        version.setConfig(currentConfig);
+        version.setVersionType("auto");
+        version.setRemark("自动保存版本");
 
-            // 获取当前最新版本号并递增
-            Long currentVersionNumber = sqlEditVersionMapper.selectMaxVersionNumberBySqlEditId(saveReqVO.getId());
-            version.setVersionNumber(currentVersionNumber + 1);
+        // 获取当前最新版本号并递增
+        Long currentVersionNumber = sqlEditVersionMapper.selectMaxVersionNumberBySqlEditId(saveReqVO.getId());
+        version.setVersionNumber(currentVersionNumber + 1);
 
-            // 保存版本
-            sqlEditVersionMapper.insert(version);
+        // 保存版本
+        sqlEditVersionMapper.insert(version);
 
-            // 检查版本数量，如果超过7个则删除最旧的版本
-            sqlEditVersionService.deleteOldVersions(saveReqVO.getId(), 7);
+        // 检查版本数量，如果超过7个则删除最旧的版本
+        sqlEditVersionService.deleteOldVersions(saveReqVO.getId(), 7);
 
     }
 
@@ -430,24 +436,63 @@ public class SqlEditServiceImpl implements SqlEditService {
     }
 
     @Override
-    public String deploy(String id) {
+    public String deploy(Long id) {
+        FlinkApi flinkApi;
         SqlEditDO sqlEditDO = sqlEditMapper.selectById(id);
         SqlEditConfigDO sqlEditConfigDO = sqlEditConfigMapper.selectBySqlEditId(sqlEditDO.getId());
         if (sqlEditConfigDO == null) {
             throw ServiceExceptionUtil.exception(new ErrorCode(9999, "请先配置环境参数"));
         }
+        if ("remote".equals(sqlEditConfigDO.getConfig().getDeployMode())) {
+            Long clusterId = sqlEditConfigDO.getConfig().getClusterId();
+            FlinkClusterDO cluster = flinkClusterService.getFlinkCluster(clusterId);
+            String[] s = cluster.getRemoteUrl().split(":");
+            if (sqlEditConfigDO.getConfig().getExtendedConfig() == null) {
+                HashMap<String, String> exConfig = new HashMap<>();
+                exConfig.put("rest.address", s[0]);
+                exConfig.put("rest.port", s[1]);
+                sqlEditConfigDO.getConfig().setExtendedConfig(exConfig);
+            } else {
+                sqlEditConfigDO.getConfig().getExtendedConfig().put("rest.address", s[0]);
+                sqlEditConfigDO.getConfig().getExtendedConfig().put("rest.port", s[1]);
+            }
+            String flinkVersion = cluster.getFlinkVersion();
+            flinkApi = FlinkApiFactory.getFlinkApiByVersion(flinkVersion);
+        } else {
+            flinkApi = FlinkApiFactory.getFlinkApiByVersion(sqlEditConfigDO.getConfig().getFlinkVersion());
+        }
         log.info("开始部署任务");
-        FlinkApi flinkApi = FlinkApiFactory.getFlinkApiByVersion(sqlEditConfigDO.getConfig().getFlinkVersion());
+        JobDeploySqlReqDto request = JobDeploySqlReqDto.builder()
+                .jobName(sqlEditDO.getName())
+                .sql(sqlEditDO.getContent())
+                .clusterId(sqlEditConfigDO.getConfig().getClusterId())
+                .fileId(sqlEditDO.getId())
+                .flinkConfig(sqlEditConfigDO.getConfig())
+                .build();
+        JobDeployRespDto data = flinkApi.deploySql(request).getCheckedData();
 
-        JobSubmitSqlReqDto request = new JobSubmitSqlReqDto();
-        JobSubmitrespDto data = flinkApi.submitSql(request).getCheckedData();
+        FlinkJobDeployDO deployDO = FlinkJobDeployDO.builder()
+                .jobId(data.getJobId())
+                .fileId(sqlEditDO.getId())
+                .clusterId(sqlEditConfigDO.getConfig().getClusterId())
+                .deployMode(request.getFlinkConfig().getDeployMode())
+                .executionMode(request.getFlinkConfig().getExecutionType())
+                .flinkVersion(sqlEditConfigDO.getConfig().getFlinkVersion())
+                .status("running")
+                .submitTime(data.getSubmitTime())
+                .config(data.getConfig())
+                .webUiUrl(data.getWebInterfaceUrl())
+                .jobName(sqlEditDO.getName())
+                .build();
+        dataJobMapper.insert(deployDO);
         return data.getJobId();
     }
+
 
     /**
      * 构建树形结构
      *
-     * @param files 所有文件列表
+     * @param files    所有文件列表
      * @param parentId 父ID
      * @return 树形结构列表
      */

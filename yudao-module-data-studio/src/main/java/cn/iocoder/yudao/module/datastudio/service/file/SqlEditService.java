@@ -88,7 +88,7 @@ public interface SqlEditService {
     /**
      * 移动文件
      *
-     * @param id 文件ID
+     * @param id             文件ID
      * @param targetParentId 目标父ID
      */
     void moveFile(Long id, Long targetParentId);
@@ -96,7 +96,7 @@ public interface SqlEditService {
     /**
      * 重命名文件
      *
-     * @param id 文件ID
+     * @param id   文件ID
      * @param name 新名称
      */
     void renameFile(Long id, String name);
@@ -104,7 +104,7 @@ public interface SqlEditService {
     /**
      * 保存文件内容
      *
-     * @param id 文件ID
+     * @param id      文件ID
      * @param content 文件内容
      * @deprecated 使用 saveFileData 代替
      */
@@ -164,5 +164,5 @@ public interface SqlEditService {
      */
     void deleteFileConfig(Long sqlEditId);
 
-    String deploy(String id);
+    String deploy(Long id);
 }

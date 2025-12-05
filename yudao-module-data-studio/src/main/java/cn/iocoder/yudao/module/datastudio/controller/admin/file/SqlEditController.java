@@ -121,7 +121,7 @@ public class SqlEditController {
     @Operation(summary = "重命名文件")
     @PreAuthorize("@ss.hasPermission('datastudio:file:update')")
     public CommonResult<Boolean> renameFile(@RequestParam("id") Long id,
-                                           @RequestParam("name") String name) {
+                                            @RequestParam("name") String name) {
         sqlEditService.renameFile(id, name);
         return success(true);
     }
@@ -130,7 +130,7 @@ public class SqlEditController {
     @Operation(summary = "保存文件内容")
     @PreAuthorize("@ss.hasPermission('datastudio:file:update')")
     public CommonResult<Boolean> saveFileContent(@RequestParam("id") Long id,
-                                                @RequestParam("content") String content) {
+                                                 @RequestParam("content") String content) {
         sqlEditService.saveFileContent(id, content);
         return success(true);
     }
@@ -160,12 +160,12 @@ public class SqlEditController {
         return success(data);
     }
 
-   //部署
+    //部署
     @GetMapping("/deploy/{id}")
     @Operation(summary = "部署")
     @Parameter(name = "id", description = "文件ID", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('datastudio:file:deploy')")
-    public CommonResult<String> deploy(@PathVariable String id) {
+    public CommonResult<String> deploy(@PathVariable Long id) {
         return success(sqlEditService.deploy(id));
     }
 }

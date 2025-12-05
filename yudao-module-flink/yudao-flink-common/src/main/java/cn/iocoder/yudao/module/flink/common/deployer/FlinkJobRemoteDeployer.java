@@ -1,0 +1,8 @@
+package cn.iocoder.yudao.module.flink.common.deployer;
+
+/**
+ * @author yzh
+ */
+public interface FlinkJobRemoteDeployer extends FlinkJobDeployer {
+
+}
