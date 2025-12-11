@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.flink.common.dal.dataobject;
 
 import cn.iocoder.yudao.framework.common.util.json.JsonUtils;
+import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.AbstractJsonTypeHandler;
@@ -55,6 +56,10 @@ public class FlinkJobDeployDO {
 
   /** 作业名称 */
   private String jobName;
+
+  
+  /** 作业类型 */
+  private JobTypeEnum jobType;
 
   /** 状态：pending-等待中，running-运行中，succeeded-成功，failed-失败，cancelled-已取消 */
   private String status;

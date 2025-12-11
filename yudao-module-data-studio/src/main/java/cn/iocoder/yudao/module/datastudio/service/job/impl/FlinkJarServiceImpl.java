@@ -14,6 +14,8 @@ import cn.iocoder.yudao.module.flink.common.dto.JobDeployJarReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import java.util.HashMap;
 import javax.annotation.Resource;
+
+import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +70,7 @@ public class FlinkJarServiceImpl implements FlinkJarService {
             .executionMode("")
             .status("running")
             .deployMode(deployMode)
+                .jobType(JobTypeEnum.JAR)
             .build();
     flinkJobDeployInfoMapper.insert(flinkJobDeployDO);
     return respDto.getJobId();

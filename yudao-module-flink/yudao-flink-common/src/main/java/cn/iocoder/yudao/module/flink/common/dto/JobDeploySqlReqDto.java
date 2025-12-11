@@ -1,12 +1,16 @@
 package cn.iocoder.yudao.module.flink.common.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author yzh
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class JobDeploySqlReqDto {
     private String sql;

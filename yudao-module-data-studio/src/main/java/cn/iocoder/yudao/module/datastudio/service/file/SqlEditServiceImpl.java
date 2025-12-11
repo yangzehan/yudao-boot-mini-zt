@@ -24,6 +24,7 @@ import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeploySqlReqDto;
+import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -479,10 +480,12 @@ public class SqlEditServiceImpl implements SqlEditService {
                 .executionMode(request.getFlinkConfig().getExecutionType())
                 .flinkVersion(sqlEditConfigDO.getConfig().getFlinkVersion())
                 .status("running")
+                .jobType(JobTypeEnum.FLINK_SQL)
                 .submitTime(data.getSubmitTime())
                 .config(data.getConfig())
                 .webUiUrl(data.getWebInterfaceUrl())
                 .jobName(sqlEditDO.getName())
+
                 .build();
         dataJobMapper.insert(deployDO);
         return data.getJobId();

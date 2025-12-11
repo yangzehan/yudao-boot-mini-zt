@@ -52,6 +52,15 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-files</artifactId>
+            <version>1.18.1</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime</artifactId>

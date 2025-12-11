@@ -18,7 +18,7 @@
         <module>yudao-module-infra</module>
         <module>yudao-module-data-studio</module>
         <!-- Flink相关模块 -->
-        <module>yudao-module-flink</module>
+        <module>yudao-module-flink</module> 
         <!--        <module>yudao-module-member</module>-->
         <!--        <module>yudao-module-bpm</module>-->
         <!--        <module>yudao-module-report</module>-->

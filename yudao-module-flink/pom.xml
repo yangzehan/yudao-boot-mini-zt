@@ -16,7 +16,6 @@
     <modules>
         <module>yudao-flink-common-deploy</module>
         <module>yudao-flink-common</module>
-        <module>yudao-module-flink-118-service</module>
     </modules>
 
 

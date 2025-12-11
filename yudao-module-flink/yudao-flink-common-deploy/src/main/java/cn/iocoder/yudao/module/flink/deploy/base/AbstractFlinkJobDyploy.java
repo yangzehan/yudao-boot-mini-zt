@@ -110,8 +110,7 @@ public abstract class AbstractFlinkJobDyploy {
             respDto.setWebInterfaceUrl(clusterClient.getWebInterfaceURL());
             return respDto;
         } catch (Exception e) {
-            log.error("连接或提交作业时出错", e);
-            throw ServiceExceptionUtil.exception(new ErrorCode(9999, "连接或提交作业时出错: {}"), e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 

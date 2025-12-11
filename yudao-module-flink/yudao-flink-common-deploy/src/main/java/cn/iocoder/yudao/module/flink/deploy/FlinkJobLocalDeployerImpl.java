@@ -1,12 +1,16 @@
 package cn.iocoder.yudao.module.flink.deploy;
 
+import cn.hutool.core.util.StrUtil;
+import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.deploy.base.AbstractFlinkJobDyploy;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalJarParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalSqlParam;
+import cn.iocoder.yudao.module.flink.deploy.service.AsyncTaskService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.runtime.minicluster.MiniCluster;
 import org.apache.flink.runtime.minicluster.MiniClusterConfiguration;
@@ -63,12 +67,17 @@ public class FlinkJobLocalDeployerImpl extends AbstractFlinkJobDyploy implements
     @Override
     public JobDeployRespDto deployJar(DeployParam deployParam) {
         DeployLocalJarParam localParam = validateParam(deployParam, DeployLocalJarParam.class);
+        Configuration configuration = localParam.getConfiguration();
+        if (StrUtil.isBlank(configuration.get(RestOptions.ADDRESS))) {
+            configuration.set(RestOptions.ADDRESS, "localhost");
+        }
         MiniClusterConfiguration miniClusterConfig = new MiniClusterConfiguration.Builder()
                 .setNumTaskManagers(1)
                 .setNumSlotsPerTaskManager(4)
-                .setConfiguration(localParam.getConfiguration())
+                .setConfiguration(configuration)
                 .build();
-        try (MiniCluster miniCluster = new MiniCluster(miniClusterConfig)) {
+        MiniCluster miniCluster = new MiniCluster(miniClusterConfig);
+        try {
             log.info("启动 MiniCluster");
             miniCluster.start();
 
@@ -99,8 +108,9 @@ public class FlinkJobLocalDeployerImpl extends AbstractFlinkJobDyploy implements
                     return localParam.getJobName();
                 }
             };
-            JobDeployRespDto respDto = submitJarTemplate(jarParam, localParam.getConfiguration());
+            JobDeployRespDto respDto = submitJarTemplate(jarParam, configuration);
             respDto.getConfig().put(RestOptions.ADDRESS.key(), "localhost");
+            SpringUtils.getBean(AsyncTaskService.class).MonitorClusters(miniCluster);
             return respDto;
         } catch (Exception e) {
             throw wrapRuntime(e);
