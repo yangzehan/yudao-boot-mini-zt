@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,7 +14,7 @@
     <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
 
     <properties>
-<!--        微服务-->
+        <!--        微服务-->
         <spring-cloud.alibaba.version>2021.0.6.2</spring-cloud.alibaba.version>
         <spring.cloud.version>2021.0.9</spring.cloud.version>
         <revision>2025.10-jdk8-SNAPSHOT</revision>
@@ -272,6 +272,13 @@
             <dependency>
                 <groupId>cn.iocoder.boot</groupId>
                 <artifactId>yudao-spring-boot-starter-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!--            api-->
+            <dependency>
+                <groupId>cn.iocoder.yudao</groupId>
+                <artifactId>yudao-module-data-studio-api</artifactId>
                 <version>${revision}</version>
             </dependency>
 

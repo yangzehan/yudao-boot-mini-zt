@@ -5,6 +5,7 @@ import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobPageReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobStatisticsRespVO;
@@ -104,7 +105,7 @@ public class DataJobServiceImpl implements DataJobService {
     reqDto.setConfig(job.getConfig());
     reqDto.setJobId(job.getJobId());
     flinkApi.cancelJob(reqDto).getCheckedData();
-    job.setStatus("cancelled");
+    job.setStatus(JobStatus.CANCELED);
     job.setEndTime(LocalDateTime.now());
     // 计算执行时长
     if (job.getStartTime() != null) {
@@ -135,7 +136,7 @@ public class DataJobServiceImpl implements DataJobService {
       throw ServiceExceptionUtil.exception(new ErrorCode(500, "作业不存在"));
     }
 
-    job.setStatus("running");
+    job.setStatus(JobStatus.RUNNING);
     job.setStartTime(LocalDateTime.now());
     dataJobMapper.updateById(job);
 
@@ -147,16 +148,15 @@ public class DataJobServiceImpl implements DataJobService {
     JobStatisticsRespVO statistics = new JobStatisticsRespVO();
 
     // 统计各状态作业数量
-    Map<String, Long> statusCountMap =
+    Map<JobStatus, Long> statusCountMap =
         dataJobMapper.selectList(null).stream()
             .collect(Collectors.groupingBy(FlinkJobDeployDO::getStatus, Collectors.counting()));
 
     statistics.setTotalCount(dataJobMapper.selectCount(null));
-    statistics.setRunningCount(statusCountMap.getOrDefault("running", 0L));
-    statistics.setSuccessCount(statusCountMap.getOrDefault("succeeded", 0L));
-    statistics.setFailedCount(statusCountMap.getOrDefault("failed", 0L));
-    statistics.setPendingCount(statusCountMap.getOrDefault("pending", 0L));
-    statistics.setCancelledCount(statusCountMap.getOrDefault("cancelled", 0L));
+    statistics.setRunningCount(statusCountMap.getOrDefault(JobStatus.RUNNING, 0L));
+    statistics.setSuccessCount(statusCountMap.getOrDefault(JobStatus.FINISHED, 0L));
+    statistics.setFailedCount(statusCountMap.getOrDefault(JobStatus.FAILED, 0L));
+    statistics.setCancelledCount(statusCountMap.getOrDefault(JobStatus.CANCELED, 0L));
 
     return statistics;
   }

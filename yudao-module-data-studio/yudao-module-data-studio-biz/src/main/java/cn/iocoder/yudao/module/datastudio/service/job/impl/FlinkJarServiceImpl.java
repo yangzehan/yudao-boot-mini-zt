@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.datastudio.service.job.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO;
 import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory;
@@ -12,10 +13,9 @@ import cn.iocoder.yudao.module.flink.common.dal.mysql.FlinkJobDeployInfoMapper;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployJarReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
+import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import java.util.HashMap;
 import javax.annotation.Resource;
-
-import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,9 +68,9 @@ public class FlinkJarServiceImpl implements FlinkJarService {
             .submitTime(respDto.getSubmitTime())
             .webUiUrl(respDto.getWebInterfaceUrl())
             .executionMode("")
-            .status("running")
+            .status(JobStatus.RUNNING)
             .deployMode(deployMode)
-                .jobType(JobTypeEnum.JAR)
+            .jobType(JobTypeEnum.JAR)
             .build();
     flinkJobDeployInfoMapper.insert(flinkJobDeployDO);
     return respDto.getJobId();
