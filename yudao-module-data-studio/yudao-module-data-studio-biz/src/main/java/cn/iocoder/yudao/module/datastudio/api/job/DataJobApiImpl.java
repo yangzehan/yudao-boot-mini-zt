@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.datastudio.api.job;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.framework.tenant.core.aop.TenantIgnore;
 import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
 import cn.iocoder.yudao.module.datastudio.api.job.dto.DataJobUpdateDto;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
@@ -18,10 +19,11 @@ public class DataJobApiImpl implements DataJobApi {
   @Resource private DataJobMapper dataJobMapper;
 
   @Override
+  @TenantIgnore
   public CommonResult<Boolean> updateJob(DataJobUpdateDto dto) {
     FlinkJobDeployDO entity = new FlinkJobDeployDO();
     entity.setJobId(dto.getJobId());
-    entity.setStatus(dto.getStatus());
+    entity.setStatus(JobStatus.valueOf(dto.getStatus()));
     LambdaQueryWrapperX<FlinkJobDeployDO> wrapper = new LambdaQueryWrapperX<>();
     wrapper.eq(FlinkJobDeployDO::getJobId, dto.getJobId());
     dataJobMapper.update(entity, wrapper);
@@ -35,7 +37,7 @@ public class DataJobApiImpl implements DataJobApi {
     for (DataJobUpdateDto dto : dtos) {
       FlinkJobDeployDO entity = new FlinkJobDeployDO();
       entity.setJobId(dto.getJobId());
-      entity.setStatus(dto.getStatus());
+      entity.setStatus(JobStatus.valueOf(dto.getStatus()));
       jobDeployDOS.add(entity);
     }
 

@@ -11,6 +11,7 @@ import cn.iocoder.yudao.module.flink.deploy.base.AbstractFlinkJobDyploy;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalJarParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalSqlParam;
 import cn.iocoder.yudao.module.flink.deploy.service.AsyncTaskService;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.configuration.Configuration;
@@ -27,7 +28,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * @author yzh
  */
 @Slf4j
-public class FlinkJobLocalDeployerImpl extends AbstractFlinkJobDyploy implements FlinkJobDeployer {
+public class FlinkJobLocalDeployerImpl extends AbstractFlinkJobDyploy implements FlinkJobDeployer, Serializable {
 
   @Override
   public DeployParam validSupportDeploySqlParam(DeployParam deployParam) {

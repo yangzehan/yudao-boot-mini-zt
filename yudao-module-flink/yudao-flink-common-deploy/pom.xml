@@ -10,16 +10,16 @@
     </parent>
     <packaging>jar</packaging>
 
-
+    <artifactId>yudao-flink-common-deploy</artifactId>
     <name>${project.artifactId}</name>
+    <description>Flink 部署模块</description>
+
     <dependencies>
         <dependency>
             <groupId>cn.iocoder.yudao.flink</groupId>
             <artifactId>yudao-flink-common</artifactId>
             <version>${revision}</version>
         </dependency>
-
-
         <!-- Flink 1.18依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -50,27 +50,29 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
             <version>1.18.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge</artifactId>
             <version>1.18.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_2.12</artifactId>
             <version>1.18.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-flink-job-listener</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
-    <artifactId>yudao-flink-common-deploy</artifactId>
-    <description>
-        Flink 部署模块
-    </description>
-
-
 </project>

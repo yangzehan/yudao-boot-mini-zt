@@ -8,7 +8,7 @@ import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.common.util.SqlUtil;
 import cn.iocoder.yudao.module.flink.deploy.service.AsyncTaskService;
-import cn.iocoder.yudao.module.flink.deploy.service.ClusterMonitorService;
+import cn.iocoder.yudao.module.flink.job.RpcJobStatusHook;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +24,7 @@ import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.graph.StreamGraph;
 import org.apache.flink.table.api.bridge.java.StreamStatementSet;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.api.internal.TableEnvironmentImpl;
@@ -31,7 +32,6 @@ import org.apache.flink.table.operations.ModifyOperation;
 import org.apache.flink.table.operations.Operation;
 import org.apache.flink.table.operations.ShowOperation;
 import org.apache.flink.table.planner.operations.PlannerQueryOperation;
-import org.apache.flink.util.FlinkException;
 
 /**
  * Flink作业执行器抽象基类
@@ -44,11 +44,6 @@ import org.apache.flink.util.FlinkException;
 public abstract class AbstractFlinkJobDyploy {
   private static final AsyncTaskService asyncTaskService =
       SpringUtils.getBean(AsyncTaskService.class);
-  private static final ClusterMonitorService clusterMonitorService =
-      SpringUtils.getBean(ClusterMonitorService.class);
-
-  private static final DefaultClusterClientServiceLoader clusterClientServiceLoader =
-      new DefaultClusterClientServiceLoader();
 
   protected static void cancelJobLocalAndRemote(Map<String, String> config, String jobId) {
     try (StandaloneClusterDescriptor clusterDescriptor =
@@ -101,6 +96,7 @@ public abstract class AbstractFlinkJobDyploy {
       JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, 1, false);
       log.info("提交作业到集群");
       CompletableFuture<JobID> jobIdFuture = clusterClient.submitJob(jobGraph);
+
       JobID jobId = jobIdFuture.get();
       log.info("作业已成功提交，作业ID: {}", jobId);
       log.info("可以通过以下URL查看作业状态: {}/#/job/{}", clusterClient.getWebInterfaceURL(), jobId);
@@ -110,8 +106,7 @@ public abstract class AbstractFlinkJobDyploy {
       respDto.setSubmitTime(LocalDateTimeUtil.now());
       respDto.setDeployMode(jarParam.getDeployMode());
       respDto.setWebInterfaceUrl(clusterClient.getWebInterfaceURL());
-      clusterMonitorService.register(
-          clusterClient.getWebInterfaceURL(), clusterClient, jobId.toString());
+
       return respDto;
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -153,9 +148,7 @@ public abstract class AbstractFlinkJobDyploy {
       if (useStatementSet) {
         statementSet.attachAsDataStream();
       }
-      JobClient jobClient = environment.executeAsync(sqlParam.getJobName());
-
-      JobDeployRespDto respDto = new JobDeployRespDto();
+      StreamGraph streamGraph = environment.getStreamGraph();
       ReadableConfig readableConfig = environment.getConfiguration();
       Configuration configuration = (Configuration) readableConfig;
       Map<String, String> config = configuration.toMap();
@@ -165,30 +158,45 @@ public abstract class AbstractFlinkJobDyploy {
         configuration.set(RestOptions.ADDRESS, address);
       }
       config.put(RestOptions.ADDRESS.key(), address);
+
+      // 构造 webInterfaceUrl
+      String webInterfaceUrl = address + ":" + readableConfig.get(RestOptions.PORT);
+
+      // 注册作业状态监控 Hook
+      streamGraph.registerJobStatusHook(
+          new RpcJobStatusHook(
+              SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
+              SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace")));
+      streamGraph.setJobName(sqlParam.getJobName());
+      JobClient jobClient = environment.executeAsync(streamGraph);
+
+      JobDeployRespDto respDto = new JobDeployRespDto();
       respDto.setConfig(config);
       respDto.setJobId(jobClient.getJobID().toString());
       respDto.setSubmitStatus(true);
       respDto.setSubmitTime(LocalDateTimeUtil.now());
-      respDto.setWebInterfaceUrl(address + ":" + readableConfig.get(RestOptions.PORT));
+      respDto.setWebInterfaceUrl(webInterfaceUrl);
       log.info("sql作业已提交，作业ID: {}", jobClient.getJobID());
 
-      if (readableConfig.get(DeploymentOptions.TARGET).equals("local")) {
-        configuration.set(DeploymentOptions.TARGET, "remote");
-      }
-      final ClusterClientFactory<ClusterID> clusterClientFactory =
-          clusterClientServiceLoader.getClusterClientFactory(configuration);
-      final ClusterID clusterId = clusterClientFactory.getClusterId(configuration);
-      if (clusterId == null) {
-        throw new FlinkException(
-            "No cluster id was specified. Please specify a cluster to which you would like to connect.");
-      }
-      try (final ClusterDescriptor<ClusterID> clusterDescriptor =
-          clusterClientFactory.createClusterDescriptor(configuration)) {
-        final ClusterClient<ClusterID> clusterClient =
-            clusterDescriptor.retrieve(clusterId).getClusterClient();
-        clusterMonitorService.register(
-            clusterClient.getWebInterfaceURL(), clusterClient, jobClient.getJobID().toString());
-      }
+      //      if (readableConfig.get(DeploymentOptions.TARGET).equals("local")) {
+      //        configuration.set(DeploymentOptions.TARGET, "remote");
+      //      }
+      //      final ClusterClientFactory<ClusterID> clusterClientFactory =
+      //          clusterClientServiceLoader.getClusterClientFactory(configuration);
+      //      final ClusterID clusterId = clusterClientFactory.getClusterId(configuration);
+      //      if (clusterId == null) {
+      //        throw new FlinkException(
+      //            "No cluster id was specified. Please specify a cluster to which you would like
+      // to connect.");
+      //      }
+      //      try (final ClusterDescriptor<ClusterID> clusterDescriptor =
+      //          clusterClientFactory.createClusterDescriptor(configuration)) {
+      //        final ClusterClient<ClusterID> clusterClient =
+      //            clusterDescriptor.retrieve(clusterId).getClusterClient();
+      //        clusterMonitorService.register(
+      //            clusterClient.getWebInterfaceURL(), clusterClient,
+      // jobClient.getJobID().toString());
+      //      }
 
       return respDto;
     } catch (Exception e) {

@@ -7,6 +7,8 @@ import javax.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("yudao-server")
 public interface DataJobApi {
@@ -18,7 +20,7 @@ public interface DataJobApi {
    * @return 是否更新成功
    */
   @PostMapping("/data-studio/job/update")
-  CommonResult<Boolean> updateJob(@Valid DataJobUpdateDto dto);
+  CommonResult<Boolean> updateJob(@Valid @RequestBody DataJobUpdateDto dto);
 
   /**
    * 批量更新作业
@@ -27,7 +29,7 @@ public interface DataJobApi {
    * @return 是否更新成功
    */
   @PostMapping("/data-studio/job/update-batch")
-  CommonResult<Boolean> updateJobBatch(@Valid List<DataJobUpdateDto> dtos);
+  CommonResult<Boolean> updateJobBatch(@Valid @RequestBody List<DataJobUpdateDto> dtos);
 
   /**
    * 根据webInterfaceURL更新作业，调用该api则说明原集群已经停止
@@ -36,5 +38,5 @@ public interface DataJobApi {
    * @return 是否更新成功
    */
   @GetMapping("/data-studio/job/update-by-web-interface-url")
-  CommonResult<Boolean> updateJob(String webInterfaceURL);
+  CommonResult<Boolean> updateJob(@RequestParam(value = "webInterfaceURL") String webInterfaceURL);
 }

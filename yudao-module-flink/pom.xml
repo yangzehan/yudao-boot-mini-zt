@@ -16,7 +16,11 @@
     <modules>
         <module>yudao-flink-common-deploy</module>
         <module>yudao-flink-common</module>
+        <module>yudao-flink-job-listener</module>
     </modules>
+    <description>
+        Flink 模块
+    </description>
 
 
 </project>

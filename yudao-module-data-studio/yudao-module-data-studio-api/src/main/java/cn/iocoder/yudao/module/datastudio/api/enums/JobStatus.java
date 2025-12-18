@@ -13,4 +13,5 @@ public enum JobStatus {
   RECONCILING,
   INITIALIZING,
   ClOSED,
+  UNKNOWN,
 }
