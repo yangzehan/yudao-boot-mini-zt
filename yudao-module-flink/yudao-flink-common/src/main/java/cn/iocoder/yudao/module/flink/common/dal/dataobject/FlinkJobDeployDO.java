@@ -14,6 +14,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 /**
  * @author yzh
@@ -43,6 +45,10 @@ public class FlinkJobDeployDO {
   /** 集群ID */
   private Long clusterId;
 
+  @Nullable
+  /** Flink集群ID */
+  private String flinkClusterId;
+
   /** 集群名称 */
   private String clusterName;
 
@@ -62,7 +68,7 @@ public class FlinkJobDeployDO {
   private JobTypeEnum jobType;
 
   /** 状态：pending-等待中，running-运行中，succeeded-成功，failed-失败，cancelled-已取消 */
-  private JobStatus status;
+  private @NonNull JobStatus status;
 
   /** 提交时间 */
   private LocalDateTime submitTime;

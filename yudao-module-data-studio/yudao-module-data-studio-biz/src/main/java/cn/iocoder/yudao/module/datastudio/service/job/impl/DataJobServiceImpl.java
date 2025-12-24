@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -116,6 +117,7 @@ public class DataJobServiceImpl implements DataJobService {
     log.info("停止作业成功: {}", job.getJobName());
   }
 
+  @Nullable
   @Override
   public FlinkJobDeployDO getJobByFlinkJobId(String flinkJobId) {
     if (!StringUtils.hasText(flinkJobId)) {

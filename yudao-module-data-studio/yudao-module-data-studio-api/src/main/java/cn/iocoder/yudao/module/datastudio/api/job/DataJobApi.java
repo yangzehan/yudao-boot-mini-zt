@@ -1,14 +1,13 @@
 package cn.iocoder.yudao.module.datastudio.api.job;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
+import cn.iocoder.yudao.module.datastudio.api.job.dto.DataJobDto;
 import cn.iocoder.yudao.module.datastudio.api.job.dto.DataJobUpdateDto;
 import java.util.List;
 import javax.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient("yudao-server")
 public interface DataJobApi {
@@ -39,4 +38,16 @@ public interface DataJobApi {
    */
   @GetMapping("/data-studio/job/update-by-web-interface-url")
   CommonResult<Boolean> updateJob(@RequestParam(value = "webInterfaceURL") String webInterfaceURL);
+
+  @PostMapping("/data-studio/job/list")
+  CommonResult<List<DataJobDto>> listJob(
+      @RequestParam("jobStatus") JobStatus jobStatus,
+      @RequestParam("flinkVersion") String flinkVersion);
+
+  @GetMapping("/data-studio/job/should-monitor/{jobId}")
+  CommonResult<Boolean> shouldMonitor(@PathVariable(value = "jobId") String jobId);
+
+  @GetMapping("/data-studio/job/monitor-job-finished")
+  CommonResult<Boolean> monitorJobFinished(
+      @RequestParam("JobId") String jobId, @RequestParam("jobStatus") JobStatus jobStatus);
 }

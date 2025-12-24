@@ -7,9 +7,9 @@ import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.common.util.SqlUtil;
-import cn.iocoder.yudao.module.flink.deploy.service.AsyncTaskService;
 import cn.iocoder.yudao.module.flink.job.RpcJobStatusHook;
 import java.io.File;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +42,6 @@ import org.apache.flink.table.planner.operations.PlannerQueryOperation;
  */
 @Slf4j
 public abstract class AbstractFlinkJobDyploy {
-  private static final AsyncTaskService asyncTaskService =
-      SpringUtils.getBean(AsyncTaskService.class);
-
   protected static void cancelJobLocalAndRemote(Map<String, String> config, String jobId) {
     try (StandaloneClusterDescriptor clusterDescriptor =
         new StandaloneClusterDescriptor(Configuration.fromMap(config))) {
@@ -94,9 +91,15 @@ public abstract class AbstractFlinkJobDyploy {
       log.info("生成JobGraph");
       configuration.set(PipelineOptions.NAME, jarParam.getJobName());
       JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, 1, false);
+
+      jobGraph.setJobStatusHooks(
+          Collections.singletonList(
+              new RpcJobStatusHook(
+                  SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
+                  SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"))));
+
       log.info("提交作业到集群");
       CompletableFuture<JobID> jobIdFuture = clusterClient.submitJob(jobGraph);
-
       JobID jobId = jobIdFuture.get();
       log.info("作业已成功提交，作业ID: {}", jobId);
       log.info("可以通过以下URL查看作业状态: {}/#/job/{}", clusterClient.getWebInterfaceURL(), jobId);
@@ -160,7 +163,7 @@ public abstract class AbstractFlinkJobDyploy {
       config.put(RestOptions.ADDRESS.key(), address);
 
       // 构造 webInterfaceUrl
-      String webInterfaceUrl = address + ":" + readableConfig.get(RestOptions.PORT);
+      String webInterfaceUrl = "http://" + address + ":" + readableConfig.get(RestOptions.PORT);
 
       // 注册作业状态监控 Hook
       streamGraph.registerJobStatusHook(
@@ -177,27 +180,6 @@ public abstract class AbstractFlinkJobDyploy {
       respDto.setSubmitTime(LocalDateTimeUtil.now());
       respDto.setWebInterfaceUrl(webInterfaceUrl);
       log.info("sql作业已提交，作业ID: {}", jobClient.getJobID());
-
-      //      if (readableConfig.get(DeploymentOptions.TARGET).equals("local")) {
-      //        configuration.set(DeploymentOptions.TARGET, "remote");
-      //      }
-      //      final ClusterClientFactory<ClusterID> clusterClientFactory =
-      //          clusterClientServiceLoader.getClusterClientFactory(configuration);
-      //      final ClusterID clusterId = clusterClientFactory.getClusterId(configuration);
-      //      if (clusterId == null) {
-      //        throw new FlinkException(
-      //            "No cluster id was specified. Please specify a cluster to which you would like
-      // to connect.");
-      //      }
-      //      try (final ClusterDescriptor<ClusterID> clusterDescriptor =
-      //          clusterClientFactory.createClusterDescriptor(configuration)) {
-      //        final ClusterClient<ClusterID> clusterClient =
-      //            clusterDescriptor.retrieve(clusterId).getClusterClient();
-      //        clusterMonitorService.register(
-      //            clusterClient.getWebInterfaceURL(), clusterClient,
-      // jobClient.getJobID().toString());
-      //      }
-
       return respDto;
     } catch (Exception e) {
       throw new RuntimeException("执行Flink SQL作业时发生错误: " + e.getMessage(), e);

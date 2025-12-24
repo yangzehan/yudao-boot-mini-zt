@@ -17,6 +17,8 @@
         <module>yudao-flink-common-deploy</module>
         <module>yudao-flink-common</module>
         <module>yudao-flink-job-listener</module>
+        <module>yudao-flink-118-yarn-deploy</module>
+        <module>yudao-flink-monitor</module>
     </modules>
     <description>
         Flink 模块

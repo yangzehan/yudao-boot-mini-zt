@@ -31,6 +31,7 @@ import java.util.*;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -398,6 +399,7 @@ public class SqlEditServiceImpl implements SqlEditService {
     sqlEditVersionService.deleteOldVersions(saveReqVO.getId(), 7);
   }
 
+  @Nullable
   @Override
   public FlinkConfig getFileConfig(Long sqlEditId) {
 
