@@ -17,6 +17,11 @@ public class FlinkConfig implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** 扩展配置项 用于存储额外的配置，支持未来扩展 */
+  @JsonProperty("extendedConfig")
+  @Nullable
+  private Map<String, String> extendedConfig = new HashMap<>();
+
   /** 执行模式：local-本地模式，remote-远程模式 */
   @JsonProperty("deployMode")
   private String deployMode = "local";
@@ -38,10 +43,9 @@ public class FlinkConfig implements Serializable {
   private Long checkpointInterval = 5000L;
 
   private String executionType;
-
-  /** 扩展配置项 用于存储额外的配置，支持未来扩展 */
-  @JsonProperty("extendedConfig")
-  private Map<String, String> extendedConfig = new HashMap<>();
+  @Nullable private String yarnSitePath;
+  @Nullable private String hdfsSitePath;
+  @Nullable private String coreSitePath;
 
   /** 添加扩展配置项 */
   public void setExtendedConfigValue(String key, String value) {

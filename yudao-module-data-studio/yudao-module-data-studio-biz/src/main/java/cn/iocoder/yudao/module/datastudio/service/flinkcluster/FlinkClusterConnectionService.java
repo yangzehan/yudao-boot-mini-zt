@@ -236,12 +236,14 @@ public class FlinkClusterConnectionService {
     private boolean pingYarnCluster(FlinkClusterDO cluster) {
         try {
             // Yarn集群健康检查逻辑
-            // 这里可以调用Yarn API检查Flink应用状态
-            String yarnUrl = cluster.getYarnUrl();
+            // 通过配置文件路径验证
+            String yarnSitePath = cluster.getYarnSitePath();
+            String hdfsSitePath = cluster.getHdfsSitePath();
+            String coreSitePath = cluster.getCoreSitePath();
             String queueName = cluster.getQueueName();
 
-            log.debug("检查Yarn集群状态 clusterId={}, queue={}",
-                    cluster.getId(), queueName);
+            log.debug("检查Yarn集群状态 clusterId={}, queue={}, yarnSitePath={}, hdfsSitePath={}, coreSitePath={}",
+                    cluster.getId(), queueName, yarnSitePath, hdfsSitePath, coreSitePath);
 
             // 简化实现：假设连接Yarn成功
             return true;

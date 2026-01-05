@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 @Getter
 public class JobDeployJarReqDto {
-    private FlinkConfig flinkConfig;
-    private String jarFile;
-    private String entryPointClassName;
-    private String[] args;
-    private String jobName;
+  private FlinkConfig flinkConfig;
+  private String jarFile;
+  private String entryPointClassName;
+  private String[] args;
+  private String jobName;
 }

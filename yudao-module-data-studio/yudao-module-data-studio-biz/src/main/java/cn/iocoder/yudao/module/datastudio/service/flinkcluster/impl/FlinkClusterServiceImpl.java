@@ -342,11 +342,17 @@ public class FlinkClusterServiceImpl implements FlinkClusterService {
                 throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "远程集群地址不能为空");
             }
         } else if ("yarn".equals(reqVO.getType())) {
-            if (!StringUtils.hasText(reqVO.getYarnUrl())) {
-                throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "Yarn ResourceManager地址不能为空");
-            }
             if (!StringUtils.hasText(reqVO.getQueueName())) {
                 throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "YARN队列名称不能为空");
+            }
+            if (!StringUtils.hasText(reqVO.getYarnSitePath())) {
+                throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "Yarn配置文件路径不能为空");
+            }
+            if (!StringUtils.hasText(reqVO.getHdfsSitePath())) {
+                throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "HDFS配置文件路径不能为空");
+            }
+            if (!StringUtils.hasText(reqVO.getCoreSitePath())) {
+                throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "Core配置文件路径不能为空");
             }
         } else {
             throw ServiceExceptionUtil.exception(GlobalErrorCodeConstants.BAD_REQUEST, "不支持的集群类型");
@@ -376,9 +382,13 @@ public class FlinkClusterServiceImpl implements FlinkClusterService {
                 return true;
 
             } else if ("yarn".equals(cluster.getType())) {
-                // 测试Yarn集群：连接到ResourceManager的Web服务
-                String yarnUrl = cluster.getYarnUrl();
-                if (!StringUtils.hasText(yarnUrl)) {
+                // 测试Yarn集群：通过配置文件路径验证
+                String yarnSitePath = cluster.getYarnSitePath();
+                String hdfsSitePath = cluster.getHdfsSitePath();
+                String coreSitePath = cluster.getCoreSitePath();
+                if (!StringUtils.hasText(yarnSitePath)
+                        || !StringUtils.hasText(hdfsSitePath)
+                        || !StringUtils.hasText(coreSitePath)) {
                     return false;
                 }
                 // TODO: 实际实现HTTP请求测试

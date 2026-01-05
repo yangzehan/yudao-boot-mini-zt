@@ -996,17 +996,17 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
     StringBuilder classPathBuilder = new StringBuilder();
     if (userJarInclusion == YarnConfigOptions.UserJarInclusion.FIRST) {
       for (String userClassPath : userClassPaths) {
-        classPathBuilder.append(userClassPath).append(File.pathSeparator);
+        classPathBuilder.append(userClassPath).append(":");
       }
     }
     for (String classPath : systemClassPaths) {
-      classPathBuilder.append(classPath).append(File.pathSeparator);
+      classPathBuilder.append(classPath).append(":");
     }
 
     // Setup jar for ApplicationMaster
     final YarnLocalResourceDescriptor localResourceDescFlinkJar =
         fileUploader.uploadFlinkDist(flinkJarPath);
-    classPathBuilder.append(localResourceDescFlinkJar.getResourceKey()).append(File.pathSeparator);
+    classPathBuilder.append(localResourceDescFlinkJar.getResourceKey()).append(":");
 
     // write job graph to tmp file and add it to local resource
     // TODO: server use user main method to generate job graph
@@ -1029,7 +1029,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             LocalResourceType.FILE,
             true,
             false);
-        classPathBuilder.append(jobGraphFilename).append(File.pathSeparator);
+        classPathBuilder.append(jobGraphFilename).append(":");
       } catch (Exception e) {
         LOG.warn("Add job graph to local resource fail.");
         throw e;
@@ -1062,7 +1062,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
           LocalResourceType.FILE,
           true,
           true);
-      classPathBuilder.append("flink-conf.yaml").append(File.pathSeparator);
+      classPathBuilder.append("flink-conf.yaml").append(":");
     } finally {
       if (tmpConfigurationFile != null && !tmpConfigurationFile.delete()) {
         LOG.warn("Fail to delete temporary file {}.", tmpConfigurationFile.toPath());
@@ -1071,7 +1071,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
     if (userJarInclusion == YarnConfigOptions.UserJarInclusion.LAST) {
       for (String userClassPath : userClassPaths) {
-        classPathBuilder.append(userClassPath).append(File.pathSeparator);
+        classPathBuilder.append(userClassPath).append(":");
       }
     }
 
