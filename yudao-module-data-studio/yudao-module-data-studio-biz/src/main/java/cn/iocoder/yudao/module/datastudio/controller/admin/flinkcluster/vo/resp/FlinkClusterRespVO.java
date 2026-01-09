@@ -79,6 +79,9 @@ public class FlinkClusterRespVO {
   @Schema(description = "Flink分布式jar包路径")
   private String yarnFlinkDistJar;
 
+  @Schema(description = "应用日志配置文件路径")
+  private String yarnAppLogConfigPath;
+
   @Schema(description = "部署模式：session-per job-application")
   private String deployMode;
 

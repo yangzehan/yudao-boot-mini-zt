@@ -11,6 +11,7 @@ import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.yarn.configuration.YarnConfigOptions;
+import org.apache.flink.yarn.configuration.YarnConfigOptionsInternal;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -154,5 +155,71 @@ class Flink118ApiImplTest {
             "F:\\Users\\yzh\\IdeaProjects\\zt\\yudao-boot-mini-zt\\yudao-module-flink\\yudao-flink-common-deploy\\src\\test\\resources\\yarn-site.xml");
     request.setFlinkConfig(flinkConfig);
     flink118Api.deployJar(request);
+  }
+
+  @Test
+  public void testDeployYarnSql() {
+    JobDeploySqlReqDto request = new JobDeploySqlReqDto();
+    request.setSql(
+        "-- 创建一个使用 datagen 连接器的数据表\n"
+            + "CREATE TABLE datagen_source (\n"
+            + "  id BIGINT,\n"
+            + "  name STRING,\n"
+            + "  age INT,\n"
+            + "  address STRING,\n"
+            + "  proctime AS PROCTIME()\n"
+            + ") WITH (\n"
+            + "  'connector' = 'datagen',\n"
+            + "  'rows-per-second' = '10',\n"
+            + "  'fields.id.kind' = 'sequence',\n"
+            + "  'fields.id.start' = '1',\n"
+            + "  'fields.id.end' = '300',\n"
+            + "  'fields.name.length' = '10',\n"
+            + "  'fields.age.min' = '18',\n"
+            + "  'fields.age.max' = '80',\n"
+            + "  'fields.address.length' = '20'\n"
+            + ");\n"
+            + "\n"
+            + "-- 创建一个打印连接器的表用于输出结果\n"
+            + "CREATE TABLE print_sink (\n"
+            + "  id BIGINT,\n"
+            + "  name STRING,\n"
+            + "  age INT,\n"
+            + "  address STRING\n"
+            + ") WITH (\n"
+            + "  'connector' = 'print'\n"
+            + ");\n"
+            + "\n"
+            + "-- 将数据从源表插入到打印表中\n"
+            + "INSERT INTO print_sink SELECT id, name, age, address FROM datagen_source;");
+    request.setJobName("test");
+
+    FlinkConfig flinkConfig = new FlinkConfig();
+    HashMap<String, String> extendedConfig = new HashMap<>();
+    extendedConfig.put(JobManagerOptions.TOTAL_PROCESS_MEMORY.key(), "1024mb");
+    extendedConfig.put(TaskManagerOptions.TOTAL_PROCESS_MEMORY.key(), "1024mb");
+    extendedConfig.put(TaskManagerOptions.NUM_TASK_SLOTS.key(), "2");
+    extendedConfig.put(
+        PROVIDED_LIB_DIRS.key(),
+        String.join(";", new String[] {"hdfs://localhost:9000/flink/flink1.18/lib"}));
+
+    // 从hdfs中取
+    extendedConfig.put(
+        YarnConfigOptions.FLINK_DIST_JAR.key(),
+        "hdfs://localhost:9000/flink/flink1.18/lib/flink-dist-1.18.1.jar");
+    extendedConfig.put(
+        YarnConfigOptionsInternal.APPLICATION_LOG_CONFIG_FILE.key(),
+        "C:\\Users\\yzh\\Downloads\\log4j.properties");
+    flinkConfig.setExtendedConfig(extendedConfig);
+    flinkConfig
+        .setDeployMode("yarn-application")
+        .setCoreSitePath(
+            "F:\\Users\\yzh\\IdeaProjects\\zt\\yudao-boot-mini-zt\\yudao-module-flink\\yudao-flink-common-deploy\\src\\test\\resources\\core-site.xml")
+        .setHdfsSitePath(
+            "F:\\Users\\yzh\\IdeaProjects\\zt\\yudao-boot-mini-zt\\yudao-module-flink\\yudao-flink-common-deploy\\src\\test\\resources\\hdfs-site.xml")
+        .setYarnSitePath(
+            "F:\\Users\\yzh\\IdeaProjects\\zt\\yudao-boot-mini-zt\\yudao-module-flink\\yudao-flink-common-deploy\\src\\test\\resources\\yarn-site.xml");
+    request.setFlinkConfig(flinkConfig);
+    flink118Api.deploySql(request);
   }
 }

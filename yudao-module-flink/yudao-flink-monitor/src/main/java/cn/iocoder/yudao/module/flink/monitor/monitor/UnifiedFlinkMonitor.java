@@ -70,13 +70,15 @@ public class UnifiedFlinkMonitor {
     // 查询需要监控的作业列表
     List<DataJobDto> runningJobs =
         dataJobApi
-            .listJob(JobStatus.RUNNING, FlinkVersion.FLINK_1_18.getVersion())
+            .listJob(
+                CollectionUtil.toList(JobStatus.RUNNING, JobStatus.CREATED),
+                FlinkVersion.FLINK_1_18.getVersion())
             .getCheckedData();
     if (CollectionUtil.isEmpty(runningJobs)) {
       log.debug("没有需要监控的运行中作业");
       return;
     }
-    log.info("开始监控 {} 个运行中的作业", runningJobs.size());
+    log.debug("开始监控 {} 个运行中的作业", runningJobs.size());
 
     for (DataJobDto runningJob : runningJobs) {
       if (!dataJobApi.shouldMonitor(runningJob.getJobId()).getCheckedData()) {

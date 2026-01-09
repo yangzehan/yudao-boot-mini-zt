@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cn.iocoder.yudao.module.flink.deploy.util;
+package cn.iocoder.yudao.module.flink.deploy.util.yarn;
 
 import static org.apache.flink.client.deployment.application.ApplicationConfiguration.APPLICATION_MAIN_CLASS;
 import static org.apache.flink.configuration.ConfigConstants.DEFAULT_FLINK_USR_LIB_DIR;
@@ -519,7 +519,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
           "Flink per-job cluster",
           getYarnJobClusterEntrypoint(),
           jobGraph,
-          detached);
+          true);
     } catch (Exception e) {
       throw new ClusterDeploymentException("Could not deploy Yarn job cluster.", e);
     }

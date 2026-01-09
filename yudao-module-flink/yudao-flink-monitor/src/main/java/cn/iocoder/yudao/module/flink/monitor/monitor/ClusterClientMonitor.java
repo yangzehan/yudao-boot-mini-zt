@@ -37,7 +37,7 @@ public class ClusterClientMonitor implements FlinkJobMonitor {
         (org.apache.flink.api.common.JobStatus)
             clusterClient
                 .getJobStatus(JobID.fromHexString(job.getJobId()))
-                .get(2000L, TimeUnit.SECONDS);
+                .get(2L, TimeUnit.SECONDS);
     clusterClient.close();
     return JobStatus.valueOf(jobStatus.name());
   }

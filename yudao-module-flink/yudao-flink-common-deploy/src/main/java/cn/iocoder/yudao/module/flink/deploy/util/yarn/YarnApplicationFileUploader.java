@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cn.iocoder.yudao.module.flink.deploy.util;
+package cn.iocoder.yudao.module.flink.deploy.util.yarn;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;

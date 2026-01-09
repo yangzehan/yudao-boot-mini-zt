@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
+ * 提交Jar作业的参数
+ *
  * @author yzh
  */
 @Setter

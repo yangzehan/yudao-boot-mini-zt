@@ -2,6 +2,8 @@ package cn.iocoder.yudao.module.datastudio.util;
 
 import cn.hutool.core.util.ObjUtil;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO;
 import cn.iocoder.yudao.module.datastudio.service.flinkcluster.FlinkClusterService;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
@@ -19,15 +21,21 @@ public class DeployUtil {
 
   public FlinkConfig getFlinkConfigByJobDeployReqVO(JobDeployReqVO reqVO) {
     FlinkConfig flinkConfig = new FlinkConfig();
-    flinkConfig.setDeployMode(reqVO.getDeployMode());
+    String deployMode = reqVO.getDeployMode();
+    flinkConfig.setDeployMode(deployMode);
     flinkConfig.setClusterId(reqVO.getClusterId());
     flinkConfig.setFlinkVersion(reqVO.getFlinkVersion());
     flinkConfig.setParallelism(reqVO.getParallelism());
     flinkConfig.setCheckpointInterval(reqVO.getCheckpointInterval());
     FlinkClusterDO flinkCluster = this.flinkClusterService.getFlinkCluster(reqVO.getClusterId());
-    HashMap<String, String> exConfig = new HashMap<>();
+    // todo 添加默认配置
+    return buildFlinkConfig(deployMode, flinkConfig, flinkCluster);
+  }
 
-    switch (reqVO.getDeployMode()) {
+  private FlinkConfig buildFlinkConfig(
+      String deployMode, FlinkConfig flinkConfig, FlinkClusterDO flinkCluster) {
+    HashMap<String, String> exConfig = new HashMap<>();
+    switch (deployMode) {
       case "local":
         break;
       case "yarn-session":
@@ -47,6 +55,7 @@ public class DeployUtil {
             "jobmanager.memory.process.size",
             flinkCluster.getJobmanagerMemoryProcessSize() + "mb");
         exConfig.put("yarn.flink-dist-jar", flinkCluster.getYarnFlinkDistJar());
+        exConfig.put("$internal.yarn.log-config-file", flinkCluster.getYarnAppLogConfigPath());
         exConfig.put(
             "taskmanager.memory.process.size",
             flinkCluster.getTaskmanagerMemoryProcessSize() + "mb");
@@ -59,7 +68,7 @@ public class DeployUtil {
           flinkConfig.getExtendedConfig().putAll(exConfig);
         }
         break;
-      case "reemote":
+      case "remote":
         String[] s = flinkCluster.getRemoteUrl().split(":");
 
         exConfig.put("rest.address", s[0]);
@@ -69,6 +78,16 @@ public class DeployUtil {
     }
 
     return flinkConfig;
+  }
+
+  public FlinkConfig getFlinkConfigBySqlEditDOAndSqlEditConfigDO(
+      SqlEditDO sqlEditDO, SqlEditConfigDO sqlEditConfigDO) {
+
+    FlinkConfig config = sqlEditConfigDO.getConfig();
+    Long clusterId = config.getClusterId();
+    FlinkClusterDO cluster = flinkClusterService.getFlinkCluster(clusterId);
+    String deployMode = config.getDeployMode();
+    return buildFlinkConfig(deployMode, config, cluster);
   }
 
   public Map<String, String> putMapIfNotNull(Map<String, String> map, String key, Object value) {

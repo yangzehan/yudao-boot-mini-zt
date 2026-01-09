@@ -78,6 +78,9 @@ public class FlinkClusterBaseVO {
   @Schema(description = "Flink分布式jar包路径", example = "hdfs://namenode:8020/flink-dist/flink-dist-1.18.jar")
   private String yarnFlinkDistJar;
 
+  @Schema(description = "应用日志配置文件路径", example = "hdfs://namenode:8020/flink-conf/log4j2.xml")
+  private String yarnAppLogConfigPath;
+
   @Schema(description = "部署模式：session-per job-application", example = "session")
   private String deployMode;
 

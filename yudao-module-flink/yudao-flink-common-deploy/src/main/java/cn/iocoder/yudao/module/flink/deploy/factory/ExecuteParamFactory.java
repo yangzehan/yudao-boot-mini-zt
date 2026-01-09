@@ -54,7 +54,21 @@ public final class ExecuteParamFactory {
         remoteParam.setConfiguration(configuration);
         remoteParam.setJobName(reqDto.getJobName());
         return remoteParam;
-
+      case YARN_APPLICATION:
+        if (!ObjUtil.isAllNotEmpty(
+            reqDto.getFlinkConfig().getYarnSitePath(),
+            reqDto.getFlinkConfig().getHdfsSitePath(),
+            reqDto.getFlinkConfig().getCoreSitePath())) {
+          throw new IllegalArgumentException("请检查YarnSitePath、HdfsSitePath、CoreSitePath是否填写");
+        }
+        DeployYarnSqlParam yarnSqlParam = new DeployYarnSqlParam();
+        yarnSqlParam.setSql(reqDto.getSql());
+        yarnSqlParam.setConfiguration(configuration);
+        yarnSqlParam.setJobName(reqDto.getJobName());
+        yarnSqlParam.setYarnSitePath(reqDto.getFlinkConfig().getYarnSitePath());
+        yarnSqlParam.setHdfsSitePath(reqDto.getFlinkConfig().getHdfsSitePath());
+        yarnSqlParam.setCoreSitePath(reqDto.getFlinkConfig().getCoreSitePath());
+        return yarnSqlParam;
       default:
         // 添加默认处理，防止意外情况
         throw new IllegalArgumentException("不支持的执行模式: " + deployModeEnum);

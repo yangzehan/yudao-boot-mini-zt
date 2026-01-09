@@ -75,9 +75,10 @@ public class DataJobApiImpl implements DataJobApi {
 
   @Override
   @TenantIgnore
-  public CommonResult<List<DataJobDto>> listJob(JobStatus jobStatus, String flinkVersion) {
+  public CommonResult<List<DataJobDto>> listJob(
+      List<JobStatus> jobStatusList, String flinkVersion) {
     LambdaQueryWrapperX<FlinkJobDeployDO> wrapper = new LambdaQueryWrapperX<>();
-    wrapper.eqIfPresent(FlinkJobDeployDO::getStatus, jobStatus);
+    wrapper.inIfPresent(FlinkJobDeployDO::getStatus, jobStatusList);
     wrapper.eqIfPresent(FlinkJobDeployDO::getFlinkVersion, flinkVersion);
 
     List<FlinkJobDeployDO> dos = dataJobMapper.selectList(wrapper);
@@ -111,15 +112,18 @@ public class DataJobApiImpl implements DataJobApi {
   @Override
   @TenantIgnore
   public CommonResult<Boolean> monitorJobFinished(String jobId, JobStatus jobStatus) {
-    redisTemplate.opsForValue().getAndDelete("jobId");
+    redisTemplate.opsForValue().getAndDelete(jobId);
 
     if (jobStatus.equals(JobStatus.RUNNING)) {
-      log.info("作业{}还在运行无需修改状态", jobId);
+      log.debug("作业{}还在运行无需修改状态", jobId);
     }
     // 先查一下作业状态，如果jobStatusHook已经处理了作业状态则无需更新
     FlinkJobDeployDO job = dataJobMapper.selectOne(FlinkJobDeployDO::getJobId, jobId);
-    if (job == null && !job.getStatus().equals(JobStatus.RUNNING)) {
-      log.info("作业{}已经不再运行，无需更新作业状态", jobId);
+    if (job == null
+        && !job.getStatus().equals(JobStatus.RUNNING)
+        && !job.getStatus().equals(JobStatus.CANCELED)
+        && !job.getStatus().equals(JobStatus.INITIALIZING)) {
+      log.debug("作业{}已经不再运行，无需更新作业状态", jobId);
       return CommonResult.success(true);
     }
     LambdaQueryWrapperX<FlinkJobDeployDO> w = new LambdaQueryWrapperX<>();
@@ -127,7 +131,7 @@ public class DataJobApiImpl implements DataJobApi {
     FlinkJobDeployDO deployDO = new FlinkJobDeployDO();
     deployDO.setStatus(jobStatus);
     dataJobMapper.update(deployDO, w);
-    log.info("作业{}状态更新成功，当前状态{}", jobId, jobStatus);
+    log.debug("作业{}状态更新成功，当前状态{}", jobId, jobStatus);
     return CommonResult.success(true);
   }
 }

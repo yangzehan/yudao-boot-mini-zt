@@ -1,12 +1,13 @@
 package cn.iocoder.yudao.module.flink.deploy.base;
 
+import static cn.iocoder.yudao.module.flink.deploy.util.sql.SqlUtil.processScripts;
+
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
 import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
-import cn.iocoder.yudao.module.flink.common.util.SqlUtil;
 import cn.iocoder.yudao.module.flink.job.RpcJobStatusHook;
 import java.io.File;
 import java.util.Collections;
@@ -28,10 +29,6 @@ import org.apache.flink.streaming.api.graph.StreamGraph;
 import org.apache.flink.table.api.bridge.java.StreamStatementSet;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.api.internal.TableEnvironmentImpl;
-import org.apache.flink.table.operations.ModifyOperation;
-import org.apache.flink.table.operations.Operation;
-import org.apache.flink.table.operations.ShowOperation;
-import org.apache.flink.table.planner.operations.PlannerQueryOperation;
 
 /**
  * Flink作业执行器抽象基类
@@ -131,26 +128,8 @@ public abstract class AbstractFlinkJobDyploy {
       StreamTableEnvironment stbEnv = StreamTableEnvironment.create(environment);
       StreamStatementSet statementSet = stbEnv.createStatementSet();
       TableEnvironmentImpl tbEnv = (TableEnvironmentImpl) stbEnv;
-      boolean useStatementSet = false;
-      String[] statements = SqlUtil.getStatements(sqlParam.getSql());
-      for (String statement : statements) {
-        Operation operation = tbEnv.getParser().parse(statement).get(0);
-        if (operation instanceof ModifyOperation) {
-          statementSet.addInsertSql(statement);
-          useStatementSet = true;
-        } else if (operation instanceof ShowOperation
-            || operation instanceof PlannerQueryOperation) {
-          throw ServiceExceptionUtil.exception(
-              new ErrorCode(9999, "不支持的Show SQL 或 SELECT SQL 类型{}"),
-              operation.getClass().getName());
-        } else {
-          tbEnv.executeSql(statement);
-        }
-      }
-
-      if (useStatementSet) {
-        statementSet.attachAsDataStream();
-      }
+      String sqlScripts = sqlParam.getSql();
+      processScripts(sqlScripts, tbEnv, statementSet);
       StreamGraph streamGraph = environment.getStreamGraph();
       ReadableConfig readableConfig = environment.getConfiguration();
       Configuration configuration = (Configuration) readableConfig;

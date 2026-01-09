@@ -92,3 +92,8 @@ flink:
     # 数据源配置项
 
 
+
+logging:
+  level:
+    cn.iocoder.yudao.module.flink.monitor.monitor.UnifiedFlinkMonitor: debug
+

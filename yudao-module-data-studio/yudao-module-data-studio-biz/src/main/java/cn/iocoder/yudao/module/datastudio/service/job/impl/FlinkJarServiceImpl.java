@@ -55,6 +55,7 @@ public class FlinkJarServiceImpl implements FlinkJarService {
             .executionMode("")
             .status(JobStatus.RUNNING)
             .jobType(JobTypeEnum.JAR)
+            .flinkClusterId(respDto.getFlinkClusterId())
             .build();
     flinkJobDeployInfoMapper.insert(flinkJobDeployDO);
     return respDto.getJobId();

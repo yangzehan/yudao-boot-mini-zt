@@ -13,13 +13,12 @@ import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditS
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
-import cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditVersionMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
 import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory;
-import cn.iocoder.yudao.module.datastudio.service.flinkcluster.impl.FlinkClusterServiceImpl;
+import cn.iocoder.yudao.module.datastudio.util.DeployUtil;
 import cn.iocoder.yudao.module.flink.common.api.FlinkApi;
 import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
@@ -53,7 +52,7 @@ public class SqlEditServiceImpl implements SqlEditService {
 
   @Resource private SqlEditVersionService sqlEditVersionService;
   @Resource private DataJobMapper dataJobMapper;
-  @Autowired private FlinkClusterServiceImpl flinkClusterService;
+  @Autowired private DeployUtil deployUtil;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -431,31 +430,15 @@ public class SqlEditServiceImpl implements SqlEditService {
 
   @Override
   public String deploy(Long id) {
-    FlinkApi flinkApi;
     SqlEditDO sqlEditDO = sqlEditMapper.selectById(id);
     SqlEditConfigDO sqlEditConfigDO = sqlEditConfigMapper.selectBySqlEditId(sqlEditDO.getId());
     if (sqlEditConfigDO == null) {
       throw ServiceExceptionUtil.exception(new ErrorCode(9999, "请先配置环境参数"));
     }
-    if ("remote".equals(sqlEditConfigDO.getConfig().getDeployMode())) {
-      Long clusterId = sqlEditConfigDO.getConfig().getClusterId();
-      FlinkClusterDO cluster = flinkClusterService.getFlinkCluster(clusterId);
-      String[] s = cluster.getRemoteUrl().split(":");
-      if (sqlEditConfigDO.getConfig().getExtendedConfig() == null) {
-        HashMap<String, String> exConfig = new HashMap<>();
-        exConfig.put("rest.address", s[0]);
-        exConfig.put("rest.port", s[1]);
-        sqlEditConfigDO.getConfig().setExtendedConfig(exConfig);
-      } else {
-        sqlEditConfigDO.getConfig().getExtendedConfig().put("rest.address", s[0]);
-        sqlEditConfigDO.getConfig().getExtendedConfig().put("rest.port", s[1]);
-      }
-      String flinkVersion = cluster.getFlinkVersion();
-      flinkApi = FlinkApiFactory.getFlinkApiByVersion(flinkVersion);
-    } else {
-      flinkApi =
-          FlinkApiFactory.getFlinkApiByVersion(sqlEditConfigDO.getConfig().getFlinkVersion());
-    }
+
+    FlinkConfig flinkConfig =
+        deployUtil.getFlinkConfigBySqlEditDOAndSqlEditConfigDO(sqlEditDO, sqlEditConfigDO);
+
     log.info("开始部署任务");
     JobDeploySqlReqDto request =
         JobDeploySqlReqDto.builder()
@@ -465,6 +448,8 @@ public class SqlEditServiceImpl implements SqlEditService {
             .fileId(sqlEditDO.getId())
             .flinkConfig(sqlEditConfigDO.getConfig())
             .build();
+
+    FlinkApi flinkApi = FlinkApiFactory.getFlinkApiByVersion(flinkConfig.getFlinkVersion());
     JobDeployRespDto data = flinkApi.deploySql(request).getCheckedData();
 
     FlinkJobDeployDO deployDO =
@@ -481,7 +466,9 @@ public class SqlEditServiceImpl implements SqlEditService {
             .config(data.getConfig())
             .webUiUrl(data.getWebInterfaceUrl())
             .jobName(sqlEditDO.getName())
+            .flinkClusterId(data.getFlinkClusterId())
             .build();
+
     dataJobMapper.insert(deployDO);
     return data.getJobId();
   }

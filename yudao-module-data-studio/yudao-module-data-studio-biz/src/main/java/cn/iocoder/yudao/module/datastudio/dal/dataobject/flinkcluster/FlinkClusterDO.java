@@ -97,6 +97,11 @@ public class FlinkClusterDO extends TenantBaseDO {
   @Nullable
   private String yarnFlinkDistJar;
 
+  /** 应用日志配置文件路径 */
+  @TableField("yarn_app_log_config_path")
+  @Nullable
+  private String yarnAppLogConfigPath;
+
   /** 部署模式：session-per job-application */
   @TableField("deploy_mode")
   private String deployMode;

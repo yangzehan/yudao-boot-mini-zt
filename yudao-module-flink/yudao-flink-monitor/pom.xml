@@ -19,6 +19,12 @@
             <version>${revision}</version>
         </dependency>
 
+        <!-- Spring Retry 重试框架 -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+
 
         <!-- Flink 1.18依赖 -->
         <dependency>

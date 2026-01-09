@@ -41,7 +41,7 @@ public interface DataJobApi {
 
   @PostMapping("/data-studio/job/list")
   CommonResult<List<DataJobDto>> listJob(
-      @RequestParam("jobStatus") JobStatus jobStatus,
+      @RequestParam("jobStatusList") List<JobStatus> jobStatusList,
       @RequestParam("flinkVersion") String flinkVersion);
 
   @GetMapping("/data-studio/job/should-monitor/{jobId}")

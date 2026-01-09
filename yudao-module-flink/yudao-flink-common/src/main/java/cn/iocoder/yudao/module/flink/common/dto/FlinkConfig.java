@@ -46,6 +46,7 @@ public class FlinkConfig implements Serializable {
   @Nullable private String yarnSitePath;
   @Nullable private String hdfsSitePath;
   @Nullable private String coreSitePath;
+  @Nullable private String yarnAppLogConfigPath;
 
   /** 添加扩展配置项 */
   public void setExtendedConfigValue(String key, String value) {
