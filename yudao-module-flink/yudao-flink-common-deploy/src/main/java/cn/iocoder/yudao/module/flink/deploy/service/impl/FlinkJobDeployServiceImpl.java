@@ -19,43 +19,56 @@ import org.springframework.stereotype.Service;
 @Service
 public class FlinkJobDeployServiceImpl implements FlinkJobDeployService {
 
+  @Override
+  public JobDeployRespDto deployJob(JobDeployRequest request) {
+    return null;
+  }
 
-    @Override
-    public JobDeployRespDto deployJob(JobDeployRequest request) {
-        return null;
-    }
+  @Override
+  public JobStatusResponse getJobStatus(String jobId) {
+    return null;
+  }
 
-    @Override
-    public JobStatusResponse getJobStatus(String jobId) {
-        return null;
-    }
+  @Override
+  public void cancelJob(JobCancelReqDto reqDto) {
+    FlinkJobDeployer deployer =
+        FlinkJobDeployerFactoryImpl.getInstance()
+            .getDeployerFactoryByDeployMode(reqDto.getConfig().get(DeploymentOptions.TARGET.key()));
+    deployer.cancelJob(reqDto.getJobId(), reqDto.getConfig());
+  }
 
-    @Override
-    public void cancelJob(JobCancelReqDto reqDto) {
-        FlinkJobDeployer deployer = FlinkJobDeployerFactoryImpl.getInstance().getDeployerFactoryByDeployMode(reqDto.getConfig().get(DeploymentOptions.TARGET.key()));
-        deployer.cancelJob(reqDto.getJobId(), reqDto.getConfig());
+  @Override
+  public JobDeployRespDto deploySql(JobDeploySqlReqDto request) {
 
-    }
+    // 根据执行模式获取对应的作业执行器
+    FlinkJobDeployer deployer =
+        FlinkJobDeployerFactoryImpl.getInstance()
+            .getDeployerFactoryByDeployMode(request.getFlinkConfig().getDeployMode());
+    // 构建执行参数
+    DeployParam deployParam = ExecuteParamFactory.createByJobSubmitSqlReqDto(request);
+    // 执行作业
+    return deployer.deploySql(deployParam);
+  }
 
-    @Override
-    public JobDeployRespDto deploySql(JobDeploySqlReqDto request) {
+  @Override
+  public JobDeployRespDto deployJar(JobDeployJarReqDto request) {
+    // 根据执行模式获取对应的作业执行器
+    FlinkJobDeployer deployer =
+        FlinkJobDeployerFactoryImpl.getInstance()
+            .getDeployerFactoryByDeployMode(request.getFlinkConfig().getDeployMode());
+    // 构建执行参数
+    DeployParam deployParam = ExecuteParamFactory.createByJobSubmitJarReqDto(request);
+    // 执行作业并获取结果
+    return deployer.deployJar(deployParam);
+  }
 
-        // 根据执行模式获取对应的作业执行器
-        FlinkJobDeployer deployer = FlinkJobDeployerFactoryImpl.getInstance().getDeployerFactoryByDeployMode(request.getFlinkConfig().getDeployMode());
-        // 构建执行参数
-        DeployParam deployParam = ExecuteParamFactory.createByJobSubmitSqlReqDto(request);
-        //执行作业
-        return deployer.deploySql(deployParam);
-    }
-
-    @Override
-    public JobDeployRespDto deployJar(JobDeployJarReqDto request) {
-        // 根据执行模式获取对应的作业执行器
-        FlinkJobDeployer deployer = FlinkJobDeployerFactoryImpl.getInstance().getDeployerFactoryByDeployMode(request.getFlinkConfig().getDeployMode());
-        // 构建执行参数
-        DeployParam deployParam = ExecuteParamFactory.createByJobSubmitJarReqDto(request);
-        // 执行作业并获取结果
-        return deployer.deployJar(deployParam);
-    }
-
+  @Override
+  public JobDeployRespDto deployDataIngestion(JobDeployDataIngestionReqDto request) {
+    FlinkJobDeployer deployer =
+        FlinkJobDeployerFactoryImpl.getInstance()
+            .getDeployerFactoryByDeployMode(request.getFlinkConfig().getDeployMode());
+    // 构建执行参数
+    DeployParam deployParam = ExecuteParamFactory.createByJobSubmitDataIngestionReqDto(request);
+    return deployer.deployDataIngestion(deployParam);
+  }
 }

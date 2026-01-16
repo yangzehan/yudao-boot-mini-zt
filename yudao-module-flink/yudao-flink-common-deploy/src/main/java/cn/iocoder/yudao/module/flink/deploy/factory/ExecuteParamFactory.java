@@ -1,15 +1,19 @@
 package cn.iocoder.yudao.module.flink.deploy.factory;
 
+import static org.apache.flink.streaming.api.environment.ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL;
+
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
+import cn.iocoder.yudao.module.flink.common.dto.JobDeployDataIngestionReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployJarReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeploySqlReqDto;
 import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
 import cn.iocoder.yudao.module.flink.deploy.param.*;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.DeploymentOptions;
 
 /**
@@ -82,10 +86,16 @@ public final class ExecuteParamFactory {
    * @return 执行参数（本地或远程）
    */
   public static DeployParam createByJobSubmitJarReqDto(JobDeployJarReqDto request) {
+    // 添加空指针检查
+    Assert.notNull(request, "请求参数不能为空");
+    Assert.notNull(request.getFlinkConfig(), "Flink配置不能为空");
     Configuration configuration = parseFlinkConfig(request.getFlinkConfig());
+    DeployModeEnum deployModeEnum =
+        EnumUtil.getBy(DeployModeEnum::getDeployName, request.getFlinkConfig().getDeployMode());
+    Assert.notNull(deployModeEnum, "无法接受该执行类型{}", request.getFlinkConfig().getDeployMode());
 
-    switch (request.getFlinkConfig().getDeployMode()) {
-      case "local":
+    switch (deployModeEnum) {
+      case LOCAL:
         DeployLocalJarParam localParam = new DeployLocalJarParam();
         localParam.setJarFile(request.getJarFile());
         localParam.setEntryPointClassName(request.getEntryPointClassName());
@@ -93,7 +103,7 @@ public final class ExecuteParamFactory {
         localParam.setConfiguration(configuration);
         localParam.setJobName(request.getJobName());
         return localParam;
-      case "remote":
+      case REMOTE:
         DeployRemoteJarParam remoteParam = new DeployRemoteJarParam();
         remoteParam.setJarFile(request.getJarFile());
         remoteParam.setEntryPointClassName(request.getEntryPointClassName());
@@ -101,29 +111,25 @@ public final class ExecuteParamFactory {
         remoteParam.setConfiguration(configuration);
         remoteParam.setJobName(request.getJobName());
         return remoteParam;
-
-      case "yarn-application":
-        DeployYarnJarParam yarnJarParam = new DeployYarnJarParam();
-        yarnJarParam.setJarFile(request.getJarFile());
-        yarnJarParam.setEntryPointClassName(request.getEntryPointClassName());
-        yarnJarParam.setArgument(request.getArgs());
-        yarnJarParam.setJobName(request.getJobName());
+      case YARN_APPLICATION:
         if (!ObjUtil.isAllNotEmpty(
             request.getFlinkConfig().getYarnSitePath(),
             request.getFlinkConfig().getHdfsSitePath(),
             request.getFlinkConfig().getCoreSitePath())) {
           throw new IllegalArgumentException("请检查YarnSitePath、HdfsSitePath、CoreSitePath是否填写");
         }
-
-        yarnJarParam
-            .setYarnSitePath(request.getFlinkConfig().getYarnSitePath())
-            .setHdfsSitePath(request.getFlinkConfig().getHdfsSitePath())
-            .setCoreSitePath(request.getFlinkConfig().getCoreSitePath())
-            .setConfiguration(configuration);
-
+        DeployYarnJarParam yarnJarParam = new DeployYarnJarParam();
+        yarnJarParam.setJarFile(request.getJarFile());
+        yarnJarParam.setEntryPointClassName(request.getEntryPointClassName());
+        yarnJarParam.setArgument(request.getArgs());
+        yarnJarParam.setJobName(request.getJobName());
+        yarnJarParam.setConfiguration(configuration);
+        yarnJarParam.setYarnSitePath(request.getFlinkConfig().getYarnSitePath());
+        yarnJarParam.setHdfsSitePath(request.getFlinkConfig().getHdfsSitePath());
+        yarnJarParam.setCoreSitePath(request.getFlinkConfig().getCoreSitePath());
         return yarnJarParam;
       default:
-        throw new IllegalArgumentException("不支持的执行模式: " + request.getFlinkConfig().getDeployMode());
+        throw new IllegalArgumentException("不支持的执行模式: " + deployModeEnum);
     }
   }
 
@@ -141,6 +147,84 @@ public final class ExecuteParamFactory {
     Configuration effectiveConfiguration = Configuration.fromMap(flinkConfig.getExtendedConfig());
     effectiveConfiguration.setString(DeploymentOptions.TARGET, flinkConfig.getDeployMode());
     effectiveConfiguration.setBoolean(DeploymentOptions.ATTACHED, true);
+
+    // 添加检查点配置
+    if (flinkConfig.getCheckpointInterval() != null) {
+      // execution.checkpointing.interval - 检查点间隔
+      effectiveConfiguration.set(
+          CHECKPOINTING_INTERVAL, java.time.Duration.ofMillis(flinkConfig.getCheckpointInterval()));
+    }
+
+    // 添加检查点存储路径配置（如果填写了的话）
+    if (flinkConfig.getCheckpointPath() != null && !flinkConfig.getCheckpointPath().isEmpty()) {
+      // state.checkpoints.checkpoint-storage - 检查点存储路径
+      effectiveConfiguration.set(
+          org.apache.flink.configuration.CheckpointingOptions.CHECKPOINTS_DIRECTORY,
+          flinkConfig.getCheckpointPath());
+    }
+
+    // 添加 parallelism 配置
+    if (flinkConfig.getParallelism() != null) {
+      effectiveConfiguration.set(CoreOptions.DEFAULT_PARALLELISM, flinkConfig.getParallelism());
+    }
+
     return effectiveConfiguration;
+  }
+
+  public static DeployParam createByJobSubmitDataIngestionReqDto(
+      JobDeployDataIngestionReqDto request) {
+    // 添加空指针检查
+    Assert.notNull(request, "请求参数不能为空");
+    Assert.notNull(request.getFlinkConfig(), "Flink配置不能为空");
+    Configuration configuration = parseFlinkConfig(request.getFlinkConfig());
+    DeployModeEnum deployModeEnum =
+        EnumUtil.getBy(DeployModeEnum::getDeployName, request.getFlinkConfig().getDeployMode());
+    Assert.notNull(deployModeEnum, "无法接受该执行类型{}", request.getFlinkConfig().getDeployMode());
+
+    switch (deployModeEnum) {
+      case LOCAL:
+        DeployLocalDataIngestionParam localParam = new DeployLocalDataIngestionParam();
+        localParam.setContent(request.getContent());
+        localParam.setConfiguration(configuration);
+        localParam.setJobName(request.getJobName());
+        localParam.setClusterId(request.getClusterId());
+        localParam.setClusterName(request.getClusterName());
+        localParam.setFileId(request.getFileId());
+        return localParam;
+      case REMOTE:
+        DeployRemoteDataIngestionParam remoteParam = new DeployRemoteDataIngestionParam();
+        remoteParam.setContent(request.getContent());
+        remoteParam.setConfiguration(configuration);
+        remoteParam.setJobName(request.getJobName());
+        remoteParam.setClusterId(request.getClusterId());
+        remoteParam.setClusterName(request.getClusterName());
+        remoteParam.setFileId(request.getFileId());
+        return remoteParam;
+      case YARN_APPLICATION:
+        if (!ObjUtil.isAllNotEmpty(
+            request.getFlinkConfig().getYarnSitePath(),
+            request.getFlinkConfig().getHdfsSitePath(),
+            request.getFlinkConfig().getCoreSitePath())) {
+          throw new IllegalArgumentException("请检查YarnSitePath、HdfsSitePath、CoreSitePath是否填写");
+        }
+        // 验证cdcDistJarPath必填
+        if (!ObjUtil.isNotEmpty(request.getFlinkCdcDistJarPath())) {
+          throw new IllegalArgumentException("请填写flinkCdcDistJarPath");
+        }
+        DeployYarnDataIngestionParam yarnParam = new DeployYarnDataIngestionParam();
+        yarnParam.setContent(request.getContent());
+        yarnParam.setConfiguration(configuration);
+        yarnParam.setJobName(request.getJobName());
+        yarnParam.setClusterId(request.getClusterId());
+        yarnParam.setClusterName(request.getClusterName());
+        yarnParam.setFileId(request.getFileId());
+        yarnParam.setCdcDistJarPath(request.getFlinkCdcDistJarPath());
+        yarnParam.setYarnSitePath(request.getFlinkConfig().getYarnSitePath());
+        yarnParam.setHdfsSitePath(request.getFlinkConfig().getHdfsSitePath());
+        yarnParam.setCoreSitePath(request.getFlinkConfig().getCoreSitePath());
+        return yarnParam;
+      default:
+        throw new IllegalArgumentException("不支持的执行模式: " + deployModeEnum);
+    }
   }
 }

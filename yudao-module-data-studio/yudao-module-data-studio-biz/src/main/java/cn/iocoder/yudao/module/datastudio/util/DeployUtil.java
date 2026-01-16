@@ -2,6 +2,8 @@ package cn.iocoder.yudao.module.datastudio.util;
 
 import cn.hutool.core.util.ObjUtil;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionConfigDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO;
@@ -84,6 +86,16 @@ public class DeployUtil {
       SqlEditDO sqlEditDO, SqlEditConfigDO sqlEditConfigDO) {
 
     FlinkConfig config = sqlEditConfigDO.getConfig();
+    Long clusterId = config.getClusterId();
+    FlinkClusterDO cluster = flinkClusterService.getFlinkCluster(clusterId);
+    String deployMode = config.getDeployMode();
+    return buildFlinkConfig(deployMode, config, cluster);
+  }
+
+  public FlinkConfig getFlinkConfigByDataIngestionDOAndDataIngestionConfigDO(
+      DataIngestionDO dataIngestionDO, DataIngestionConfigDO dataIngestionConfigDO) {
+
+    FlinkConfig config = dataIngestionConfigDO.getConfig();
     Long clusterId = config.getClusterId();
     FlinkClusterDO cluster = flinkClusterService.getFlinkCluster(clusterId);
     String deployMode = config.getDeployMode();

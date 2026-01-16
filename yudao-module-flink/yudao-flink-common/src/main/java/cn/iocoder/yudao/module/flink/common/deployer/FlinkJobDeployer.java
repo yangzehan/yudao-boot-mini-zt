@@ -24,4 +24,6 @@ public interface FlinkJobDeployer {
   JobDeployRespDto deployJar(DeployParam deployParam);
 
   void cancelJob(String jobId, Map<String, String> config);
+
+  JobDeployRespDto deployDataIngestion(DeployParam deployParam);
 }

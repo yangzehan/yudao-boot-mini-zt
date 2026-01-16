@@ -19,7 +19,9 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -281,6 +283,74 @@ public class DataSourceServiceImpl implements DataSourceService {
                      .replace("{database}", reqVO.getDatabase() != null ? reqVO.getDatabase() : "");
         }
         return url;
+    }
+
+    @Override
+    public List<String> getTables(Long id) {
+        DataSourceDO dataSource = dataSourceMapper.selectById(id);
+        if (dataSource == null) {
+            throw new IllegalArgumentException("数据源不存在：" + id);
+        }
+
+        List<String> tables = new ArrayList<>();
+        Connection conn = null;
+        ResultSet rs = null;
+
+        try {
+            // 测试连接并获取表列表
+            DataSourceTypeRespVO typeConfig = DATA_SOURCE_TYPES.get(dataSource.getType());
+            if (typeConfig == null) {
+                throw new IllegalArgumentException("不支持的数据源类型：" + dataSource.getType());
+            }
+
+            // 加载驱动
+            Class.forName(typeConfig.getDriverClassName());
+
+            // 获取连接
+            conn = DriverManager.getConnection(
+                    dataSource.getUrl(),
+                    dataSource.getUsername(),
+                    dataSource.getPassword()
+            );
+
+            // 获取数据库元数据
+            DatabaseMetaData metaData = conn.getMetaData();
+            String catalog = null;
+            String schemaPattern = null;
+
+            // 对于不同数据库，需要使用不同的catalog和schema
+            // MySQL使用database作为catalog
+            if ("mysql".equals(dataSource.getType())) {
+                catalog = dataSource.getDatabase();
+            }
+
+            rs = metaData.getTables(catalog, schemaPattern, "%", new String[]{"TABLE"});
+
+            while (rs.next()) {
+                String tableName = rs.getString("TABLE_NAME");
+                if (tableName != null && !tableName.isEmpty()) {
+                    tables.add(tableName);
+                }
+            }
+
+            log.info("获取数据源表列表成功：{}，共 {} 个表", dataSource.getName(), tables.size());
+            return tables;
+
+        } catch (ClassNotFoundException e) {
+            log.error("数据源驱动加载失败：{}", dataSource.getType(), e);
+            throw new IllegalArgumentException("数据源驱动不存在：" + dataSource.getType());
+        } catch (SQLException e) {
+            log.error("获取数据源表列表失败：{}", dataSource.getName(), e);
+            throw new IllegalArgumentException("获取表列表失败：" + e.getMessage());
+        } finally {
+            // 关闭资源
+            try {
+                if (rs != null) rs.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                log.warn("关闭数据库连接失败", e);
+            }
+        }
     }
 
 }

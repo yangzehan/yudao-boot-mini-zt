@@ -152,4 +152,11 @@ public class DataSourceController {
         return success(types);
     }
 
+    @GetMapping("/tables")
+    @Operation(summary = "获取数据源的表列表")
+    @Parameter(name = "datasourceId", description = "数据源ID", required = true)
+    public CommonResult<List<String>> getTables(@RequestParam("datasourceId") Long datasourceId) {
+        return success(dataSourceService.getTables(datasourceId));
+    }
+
 }

@@ -44,3 +44,10 @@ create index idx_status
 
 create index idx_submit_time
     on data_studio_flink_job_deploy (submit_time);
+
+
+alter table data_studio_flink_job_deploy
+    add flink_cluster_id varchar(50) null comment 'fink集群id' after cluster_id;
+
+alter table data_studio_flink_job_deploy
+    add job_type varchar(50) null comment '作业类型';

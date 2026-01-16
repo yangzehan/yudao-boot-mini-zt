@@ -92,4 +92,12 @@ public interface DataSourceService {
      */
     List<DataSourceTypeRespVO> getDataSourceTypes();
 
+    /**
+     * 获取数据源的表列表
+     *
+     * @param id 数据源ID
+     * @return 表名列表
+     */
+    List<String> getTables(Long id);
+
 }

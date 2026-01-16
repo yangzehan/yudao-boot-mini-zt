@@ -206,4 +206,12 @@ public abstract class AbstractFlinkJobDyploy {
 
     String getJobName();
   }
+
+  public interface DeployDataIngestionParam {
+    String getDeployMode();
+
+    String getJobName();
+
+    String getContent();
+  }
 }

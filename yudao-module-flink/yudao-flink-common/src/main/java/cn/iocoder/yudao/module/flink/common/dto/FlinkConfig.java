@@ -42,6 +42,14 @@ public class FlinkConfig implements Serializable {
   @JsonProperty("checkpointInterval")
   private Long checkpointInterval = 5000L;
 
+  /** 检查点存储路径 - 不填时使用后端默认配置 */
+  @JsonProperty("checkpointPath")
+  private String checkpointPath;
+
+  /** Flink CDC Dist JAR包路径 - 用于Yarn Application模式下的CDC数据同步 */
+  @JsonProperty("flinkCdcDistJarPath")
+  private String flinkCdcDistJarPath;
+
   private String executionType;
   @Nullable private String yarnSitePath;
   @Nullable private String hdfsSitePath;
