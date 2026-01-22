@@ -78,6 +78,7 @@ public class RpcJobStatusHook implements JobStatusHook {
    * @param status Flink 作业状态
    */
   private void updateJobStatus(JobID jobId, String status) {
+    String url = null;
     try {
       init();
       // 通过nacosService 获取yudao-server的实例  然后完成调用/data-studio/job/update
@@ -85,15 +86,15 @@ public class RpcJobStatusHook implements JobStatusHook {
       List<Instance> instances = nacosNamingService.getAllInstances("yudao-server");
       Instance instance = instances.get(ThreadLocalRandom.current().nextInt(instances.size()));
       // 构建url
-      String url = "http://" + instance.toInetAddr() + "/data-studio/job/update";
-      String data = HttpUtil.post(url, objectMapper.writeValueAsString(dto));
+      url = "http://" + instance.toInetAddr() + "/data-studio/job/update";
+      String data = HttpUtil.post(url, objectMapper.writeValueAsString(dto), 3000);
       if (objectMapper.readTree(data).get("code").asInt() == 0) {
-        log.info("更新作业状态成功，JobID: {}, status: {}", jobId, status);
+        log.info("更新作业状态成功，请求地址:{} JobID: {}, status: {}", url, jobId, status);
       } else {
-        log.error("更新作业状态失败，JobID: {}, status: {},respond{}", jobId, status, data);
+        log.error("更新作业状态失败,请求地址:{}，JobID: {}, status: {},respond{}", url, jobId, status, data);
       }
     } catch (Exception e) {
-      log.error("更新作业状态失败，JobID: {}, status: {}", jobId, status, e);
+      log.error("更新作业状态失败，请求地址:{}，JobID: {}, status: {}", url, jobId, status, e);
     }
   }
 }

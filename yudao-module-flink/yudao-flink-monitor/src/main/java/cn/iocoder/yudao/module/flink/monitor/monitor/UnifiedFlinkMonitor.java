@@ -3,7 +3,6 @@ package cn.iocoder.yudao.module.flink.monitor.monitor;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.thread.ExecutorBuilder;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.iocoder.yudao.module.datastudio.api.enums.FlinkVersion;
 import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
 import cn.iocoder.yudao.module.datastudio.api.job.DataJobApi;
 import cn.iocoder.yudao.module.datastudio.api.job.dto.DataJobDto;
@@ -14,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,10 +31,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class UnifiedFlinkMonitor {
-
   private final DataJobApi dataJobApi;
   private final CompositeFlinkMonitor compositeFlinkMonitor;
   private final ExecutorService executorService;
+
+  @Value("${flink.version}")
+  private String flinkVersion;
 
   public UnifiedFlinkMonitor(DataJobApi dataJobApi, CompositeFlinkMonitor compositeFlinkMonitor) {
     this.dataJobApi = dataJobApi;
@@ -71,8 +73,8 @@ public class UnifiedFlinkMonitor {
     List<DataJobDto> runningJobs =
         dataJobApi
             .listJob(
-                CollectionUtil.toList(JobStatus.RUNNING, JobStatus.CREATED),
-                FlinkVersion.FLINK_1_18.getVersion())
+                CollectionUtil.toList(JobStatus.RUNNING, JobStatus.CREATED, JobStatus.INITIALIZING),
+                flinkVersion)
             .getCheckedData();
     if (CollectionUtil.isEmpty(runningJobs)) {
       log.debug("没有需要监控的运行中作业");

@@ -84,7 +84,7 @@ spring:
 
 # Flink V2服务本地配置
 flink:
-  version: 1.18
+  version: 1.19
   v2:
     cluster-address: 127.0.0.1:8081
     history-address: 127.0.0.1:8082

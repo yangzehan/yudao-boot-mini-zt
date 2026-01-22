@@ -4,7 +4,7 @@ import static org.apache.flink.streaming.api.environment.ExecutionCheckpointingO
 
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
-import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobRemoteDeployer;
+import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.deploy.base.AbstractFlinkJobDyploy;
 import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
@@ -32,8 +32,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * @author yzh
  */
 @Slf4j
-public class FlinkJobRemoteDeployerImpl extends AbstractFlinkJobDyploy
-    implements FlinkJobRemoteDeployer {
+public class FlinkJobRemoteDeployerImpl extends AbstractFlinkJobDyploy implements FlinkJobDeployer {
 
   @Override
   public JobDeployRespDto deployJar(DeployParam deployParam) {

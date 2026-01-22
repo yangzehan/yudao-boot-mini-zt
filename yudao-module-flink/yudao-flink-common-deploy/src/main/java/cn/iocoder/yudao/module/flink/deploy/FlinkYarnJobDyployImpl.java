@@ -81,8 +81,6 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
     if (configuration.contains(CHECKPOINTING_INTERVAL)) {
       long checkpointInterval = configuration.get(CHECKPOINTING_INTERVAL).toMillis();
       environment.enableCheckpointing(checkpointInterval);
-    } else {
-      environment.enableCheckpointing(5000L); // 默认5秒
     }
     // 设置 parallelism（配置已通过 Configuration 传递）
     if (configuration.contains(CoreOptions.DEFAULT_PARALLELISM)) {
@@ -298,7 +296,7 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
     String endpointURL = jobTerminationHeaders.getTargetRestEndpointURL();
     webUiUrl = webUiUrl.substring(0, webUiUrl.lastIndexOf("/"));
     String url = MessageParameters.resolveUrl(webUiUrl + endpointURL, params);
-    String resp = HttpUtil.get(url, 3000);
+    String resp = HttpUtil.get(url, 30000);
 
     if (!"{}".equals(resp)) {
 

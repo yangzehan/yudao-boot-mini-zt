@@ -101,6 +101,10 @@ public class DataJobServiceImpl implements DataJobService {
     if (job == null) {
       throw ServiceExceptionUtil.exception(new ErrorCode(500, "作业不存在"));
     }
+    // 检查作业是否处于初始化阶段，初始化阶段不允许取消
+    if (JobStatus.INITIALIZING.equals(job.getStatus())) {
+      throw ServiceExceptionUtil.exception(new ErrorCode(400, "作业正在初始化中，请等待初始化完成后再停止"));
+    }
     FlinkApi flinkApi = FlinkApiFactory.getFlinkApiByVersion(job.getFlinkVersion());
     JobCancelReqDto reqDto = new JobCancelReqDto();
     reqDto.setConfig(job.getConfig());
