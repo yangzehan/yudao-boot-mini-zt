@@ -14,99 +14,242 @@
     <name>${project.artifactId}</name>
     <description>Flink 部署模块</description>
 
+    <properties>
+        <!-- 默认 Flink 版本，各版本模块可覆盖 -->
+        <flink.version>1.18.1</flink.version>
+        <cdc.version>3.2.0</cdc.version>
+        <flink.hadoop.version>2.10.2</flink.hadoop.version>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>cn.iocoder.yudao.flink</groupId>
+            <groupId>cn.iocoder.boot</groupId>
             <artifactId>yudao-flink-common</artifactId>
             <version>${revision}</version>
         </dependency>
-        <!-- Flink 1.18依赖 -->
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.32</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_2.12</artifactId>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+        <!-- Flink 依赖 - 默认版本 1.18.1，各版本模块可覆盖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime-web</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-yarn</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hadoop-common</artifactId>
+                    <groupId>org.apache.hadoop</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hadoop-yarn-common</artifactId>
+                    <groupId>org.apache.hadoop</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>hadoop-hdfs</artifactId>
+                    <groupId>org.apache.hadoop</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <artifactId>hadoop-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>servlet-api</artifactId>
+                    <groupId>javax.servlet</groupId>
+                </exclusion>
+            </exclusions>
+            <groupId>org.apache.hadoop</groupId>
+            <version>${flink.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <artifactId>hadoop-yarn-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>servlet-api</artifactId>
+                    <groupId>javax.servlet</groupId>
+                </exclusion>
+            </exclusions>
+            <groupId>org.apache.hadoop</groupId>
+            <version>${flink.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <artifactId>hadoop-hdfs</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>servlet-api</artifactId>
+                    <groupId>javax.servlet</groupId>
+                </exclusion>
+            </exclusions>
+            <groupId>org.apache.hadoop</groupId>
+            <version>${flink.hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cdc-pipeline-connector-mysql</artifactId>
+            <version>3.2.0</version>
+            <scope>${flink.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-cli</artifactId>
+            <artifactId>flink-cdc-pipeline-connector-doris</artifactId>
             <version>3.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-composer</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-common</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
+            <scope>${flink.scope}</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.doris</groupId>
+            <artifactId>flink-doris-connector-1.18</artifactId>
+            <version>24.1.0</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_2.12</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-s3-fs-hadoop</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
+            <version>${flink.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
+
+        <!-- CDC 依赖 - 默认版本 3.2.0，各版本模块可覆盖 -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cdc-cli</artifactId>
+            <version>${cdc.version}</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cdc-composer</artifactId>
+            <version>${cdc.version}</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cdc-common</artifactId>
+            <version>${cdc.version}</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
             <artifactId>yudao-flink-job-listener</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-files</artifactId>
+            <version>1.18.1</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-jdbc</artifactId>
+            <version>3.2.0-1.18</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-sql-connector-mysql-cdc</artifactId>
+            <version>3.2.0</version>
+            <scope>${flink.scope}</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Shade Plugin 打包胖包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>${shade.plugin.skip}</skip>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <!-- 排除不需要的依赖 -->
+                    <artifactSet>
+                        <includes>
+                            <include>cn.iocoder.boot:yudao-flink-common</include>
+                            <include>cn.iocoder.boot:yudao-common</include>
+                            <include>org.apache.flink:flink-cdc-composer:*</include>
+                            <include>org.apache.flink:flink-cdc-common:*</include>
+                            <include>org.apache.flink:flink-cdc-cli:*</include>
+                        </includes>
+                    </artifactSet>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

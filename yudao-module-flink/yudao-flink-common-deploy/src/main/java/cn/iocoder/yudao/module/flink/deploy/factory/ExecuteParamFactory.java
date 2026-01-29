@@ -3,8 +3,10 @@ package cn.iocoder.yudao.module.flink.deploy.factory;
 import static org.apache.flink.streaming.api.environment.ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployDataIngestionReqDto;
@@ -12,9 +14,12 @@ import cn.iocoder.yudao.module.flink.common.dto.JobDeployJarReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeploySqlReqDto;
 import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
 import cn.iocoder.yudao.module.flink.deploy.param.*;
+import java.util.Iterator;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.DeploymentOptions;
+import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.util.NetUtils;
 
 /**
  * Flink执行参数工厂
@@ -166,6 +171,19 @@ public final class ExecuteParamFactory {
     // 添加 parallelism 配置
     if (flinkConfig.getParallelism() != null) {
       effectiveConfiguration.set(CoreOptions.DEFAULT_PARALLELISM, flinkConfig.getParallelism());
+    }
+
+    String restBindPort = flinkConfig.getExtendedConfig().get("rest.bind-port");
+
+    if (StrUtil.isNotEmpty(restBindPort)) {
+      Iterator<Integer> range = NetUtils.getPortRangeFromString(restBindPort);
+      range.forEachRemaining(
+          port -> {
+            if (NetUtil.isUsableLocalPort(port)) {
+              effectiveConfiguration.setString("rest.port", String.valueOf(port));
+              effectiveConfiguration.removeConfig(RestOptions.BIND_PORT);
+            }
+          });
     }
 
     return effectiveConfiguration;

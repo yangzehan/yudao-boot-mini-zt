@@ -25,6 +25,12 @@
 
 
     <dependencies>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.32</version>
+            <scope>runtime</scope>
+        </dependency>
         <!-- 引入Flink公共模块 -->
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
@@ -62,131 +68,16 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
-
-        <!-- Flink 1.18依赖 -->
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-cli</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-composer</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>calcite-core</artifactId>
-                    <groupId>org.apache.calcite</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-common</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-pipeline-connector-mysql</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-pipeline-connector-doris</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.doris</groupId>
-            <artifactId>flink-doris-connector-1.18</artifactId>
-            <version>24.1.0</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-yarn</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-s3-fs-hadoop</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-runtime-web</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-java</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java</artifactId>
-            <version>1.18.1</version>
-
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients</artifactId>
-            <version>1.18.1</version>
-
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java</artifactId>
-            <version>1.18.1</version>
-
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java-bridge</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner_2.12</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-files</artifactId>
-            <version>1.18.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-sql-connector-mysql-cdc</artifactId>
-            <version>3.2.0</version>
-
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-jdbc</artifactId>
-            <version>3.2.0-1.18</version>
-            <scope>provided</scope>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-flink-job-listener</artifactId>
+            <version>${revision}</version>
         </dependency>
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 测试依赖 -->
@@ -197,6 +88,23 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>

@@ -19,9 +19,10 @@ public interface FlinkJobDeployer {
    * 执行JAR作业
    *
    * @param deployParam 部署参数
+   * @param async
    * @return JobDeployRespDto 包含作业ID、集群信息、Web界面URL等
    */
-  JobDeployRespDto deployJar(DeployParam deployParam);
+  JobDeployRespDto deployJar(DeployParam deployParam, boolean async);
 
   void cancelJob(String jobId, Map<String, String> config);
 

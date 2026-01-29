@@ -11,6 +11,7 @@ import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save
 import cn.iocoder.yudao.module.datastudio.controller.admin.dataIngestion.vo.save.DataIngestionSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.flink.job.deploy.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.dataIngestion.DataIngestionMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
@@ -18,7 +19,6 @@ import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory
 import cn.iocoder.yudao.module.datastudio.service.dataIngestionVersion.DataIngestionVersionService;
 import cn.iocoder.yudao.module.datastudio.util.DeployUtil;
 import cn.iocoder.yudao.module.flink.common.api.FlinkApi;
-import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployDataIngestionReqDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;

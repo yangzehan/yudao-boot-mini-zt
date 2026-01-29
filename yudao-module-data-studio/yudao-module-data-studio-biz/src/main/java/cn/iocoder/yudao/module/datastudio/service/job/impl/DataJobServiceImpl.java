@@ -9,6 +9,7 @@ import cn.iocoder.yudao.module.datastudio.api.enums.JobStatus;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobPageReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobStatisticsRespVO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.flink.job.deploy.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
 import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory;
 import cn.iocoder.yudao.module.datastudio.service.file.SqlEditService;
@@ -16,7 +17,6 @@ import cn.iocoder.yudao.module.datastudio.service.flinkcluster.FlinkClusterServi
 import cn.iocoder.yudao.module.datastudio.service.job.DataJobService;
 import cn.iocoder.yudao.module.datastudio.service.job.FlinkJarService;
 import cn.iocoder.yudao.module.flink.common.api.FlinkApi;
-import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.JobCancelReqDto;
 import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import java.time.LocalDateTime;

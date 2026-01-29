@@ -58,6 +58,10 @@ public class RpcJobStatusHook implements JobStatusHook {
   }
 
   private void init() {
+    log.info(
+        "初始化 RpcJobStatusHook{}",
+        Thread.currentThread().getContextClassLoader().getClass().getName());
+
     if (this.nacosNamingService == null) {
       Properties properties = new Properties();
       properties.put("serverAddr", serverAddr);

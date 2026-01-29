@@ -69,7 +69,7 @@
             <version>4.5.14</version>
         </dependency>
         <dependency>
-            <groupId>cn.iocoder.yudao.flink</groupId>
+            <groupId>cn.iocoder.boot</groupId>
             <artifactId>yudao-flink-common</artifactId>
             <version>${revision}</version>
         </dependency>

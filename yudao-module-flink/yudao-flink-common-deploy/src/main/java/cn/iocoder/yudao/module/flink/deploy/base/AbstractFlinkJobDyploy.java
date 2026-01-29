@@ -1,13 +1,13 @@
 package cn.iocoder.yudao.module.flink.deploy.base;
 
-import static cn.iocoder.yudao.module.flink.deploy.util.sql.SqlUtil.processScripts;
+import static cn.iocoder.yudao.module.flink.deploy.util.sql.FlinkSqlScriptExecutor.execute;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
-import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
+import cn.iocoder.yudao.module.flink.deploy.constant.NacosConstant;
 import cn.iocoder.yudao.module.flink.job.RpcJobStatusHook;
 import java.io.File;
 import java.util.Collections;
@@ -92,8 +92,7 @@ public abstract class AbstractFlinkJobDyploy {
       jobGraph.setJobStatusHooks(
           Collections.singletonList(
               new RpcJobStatusHook(
-                  SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
-                  SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"))));
+                  NacosConstant.getDiscoveryServerAddr(), NacosConstant.getDiscoveryNamespace())));
 
       log.info("提交作业到集群");
       CompletableFuture<JobID> jobIdFuture = clusterClient.submitJob(jobGraph);
@@ -119,17 +118,22 @@ public abstract class AbstractFlinkJobDyploy {
    * <p>封装了SQL执行流程： 1. 创建StreamExecutionEnvironment（由子类实现） 2. 创建StreamTableEnvironment 3. 解析和执行SQL语句
    * 4. 处理ModifyOperation和其他操作类型
    *
+   * <p>支持临时配置（SET 语句），执行完毕后会自动恢复原始配置，确保不影响其他脚本。
+   *
    * @param sqlParam SQL执行参数
    * @param environment StreamExecutionEnvironment（由子类提供）
    */
   protected <ClusterID> JobDeployRespDto executeSqlTemplate(
       DeploySqlParam sqlParam, StreamExecutionEnvironment environment) {
+    StreamTableEnvironment stbEnv = StreamTableEnvironment.create(environment);
+    StreamStatementSet statementSet = stbEnv.createStatementSet();
+    TableEnvironmentImpl tbEnv = (TableEnvironmentImpl) stbEnv;
+
     try {
-      StreamTableEnvironment stbEnv = StreamTableEnvironment.create(environment);
-      StreamStatementSet statementSet = stbEnv.createStatementSet();
-      TableEnvironmentImpl tbEnv = (TableEnvironmentImpl) stbEnv;
+      // 执行 SQL 脚本（配置恢复由 FlinkSqlScriptExecutor 内部处理）
       String sqlScripts = sqlParam.getSql();
-      processScripts(sqlScripts, tbEnv, statementSet);
+      execute(sqlScripts, tbEnv, statementSet);
+
       StreamGraph streamGraph = environment.getStreamGraph();
       ReadableConfig readableConfig = environment.getConfiguration();
       Configuration configuration = (Configuration) readableConfig;
@@ -139,16 +143,13 @@ public abstract class AbstractFlinkJobDyploy {
         address = "localhost";
         configuration.set(RestOptions.ADDRESS, address);
       }
-      config.put(RestOptions.ADDRESS.key(), address);
-
       // 构造 webInterfaceUrl
       String webInterfaceUrl = "http://" + address + ":" + readableConfig.get(RestOptions.PORT);
 
       // 注册作业状态监控 Hook
       streamGraph.registerJobStatusHook(
           new RpcJobStatusHook(
-              SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
-              SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace")));
+              NacosConstant.getDiscoveryServerAddr(), NacosConstant.getDiscoveryNamespace()));
       streamGraph.setJobName(sqlParam.getJobName());
       JobClient jobClient = environment.executeAsync(streamGraph);
 

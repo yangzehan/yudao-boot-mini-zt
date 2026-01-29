@@ -23,5 +23,29 @@
         Flink 模块
     </description>
 
+    <properties>
+        <flink.scope>compile</flink.scope>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <flink.scope>compile</flink.scope>
+                <shade.plugin.skip>true</shade.plugin.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <flink.scope>provided</flink.scope>
+                <shade.plugin.skip>false</shade.plugin.skip>
+            </properties>
+        </profile>
+    </profiles>
+
 
 </project>

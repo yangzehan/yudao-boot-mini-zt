@@ -21,4 +21,5 @@ public class DeployRemoteDataIngestionParam implements DeployParam {
     private Long clusterId;
     private String clusterName;
     private Long fileId;
+    private String cdcDistJarPath;
 }

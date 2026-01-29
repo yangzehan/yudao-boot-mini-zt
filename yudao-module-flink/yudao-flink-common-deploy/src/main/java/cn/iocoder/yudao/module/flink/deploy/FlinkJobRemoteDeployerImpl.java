@@ -7,6 +7,8 @@ import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.deploy.base.AbstractFlinkJobDyploy;
+import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployer;
+import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployRemoteDataIngestionParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployRemoteJarParam;
@@ -35,7 +37,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class FlinkJobRemoteDeployerImpl extends AbstractFlinkJobDyploy implements FlinkJobDeployer {
 
   @Override
-  public JobDeployRespDto deployJar(DeployParam deployParam) {
+  public JobDeployRespDto deployJar(DeployParam deployParam, boolean async) {
     DeployRemoteJarParam remoteParam = validateParam(deployParam, DeployRemoteJarParam.class);
     // 实现ExecuteJarParam接口
     DeployJarParam jarParam =
@@ -76,37 +78,10 @@ public class FlinkJobRemoteDeployerImpl extends AbstractFlinkJobDyploy implement
 
   @Override
   public JobDeployRespDto deployDataIngestion(DeployParam deployParam) {
-    log.info("开始执行远程数据集成任务");
-    DeployRemoteDataIngestionParam deployRemoteParam =
+    DeployRemoteDataIngestionParam remoteParam =
         validateParam(deployParam, DeployRemoteDataIngestionParam.class);
-    Configuration configuration = deployRemoteParam.getConfiguration();
-    FlinkPipelineComposer composer =
-        FlinkPipelineComposer.ofRemoteCluster(configuration, Collections.emptyList());
-    JobDeployRespDto respDto = new JobDeployRespDto();
-    try {
-      PipelineDef pipelineDef =
-          new YamlPipelineDefinitionParser()
-              .parse(
-                  deployRemoteParam.getContent(),
-                  new org.apache.flink.cdc.common.configuration.Configuration());
-      PipelineExecution.ExecutionInfo executionInfo = composer.compose(pipelineDef).execute();
-
-      respDto
-          .setSubmitTime(LocalDateTimeUtil.now())
-          .setSubmitStatus(true)
-          .setJobId(executionInfo.getId())
-          .setDeployMode(DeployModeEnum.REMOTE.getDeployName())
-          .setMessage("部署成功")
-          .setConfig(configuration.toMap())
-          .setWebInterfaceUrl(
-              "http://"
-                  + configuration.getString(RestOptions.ADDRESS)
-                  + ":"
-                  + configuration.getInteger(RestOptions.PORT));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return respDto;
+    DataIngestionDeployer dataIngestionDeployer = new DataIngestionDeployerImpl();
+    return dataIngestionDeployer.deployRemote(remoteParam);
   }
 
   @Override

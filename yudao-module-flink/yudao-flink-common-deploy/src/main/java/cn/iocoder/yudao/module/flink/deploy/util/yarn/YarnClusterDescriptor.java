@@ -164,6 +164,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
   private final String nodeLabel;
   private final String applicationType;
   private final YarnConfigOptions.UserJarInclusion userJarInclusion;
+  private final List<Path> userJarPaths = new LinkedList<>();
   private Path flinkJarPath;
 
   public YarnClusterDescriptor(
@@ -319,6 +320,10 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
           "The passed jar path ('" + localJarPath + "') does not end with the 'jar' extension");
     }
     this.flinkJarPath = localJarPath;
+  }
+
+  public void addUserJar(Path path) {
+    this.userJarPaths.add(path);
   }
 
   // -------------------------------------------------------------
@@ -881,6 +886,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
     }
 
     final Set<Path> userJarFiles = new HashSet<>();
+    userJarFiles.addAll(userJarPaths);
     if (jobGraph != null) {
       userJarFiles.addAll(
           jobGraph.getUserJars().stream()

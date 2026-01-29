@@ -1,0 +1,36 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: flink-118-service
+  profiles:
+    active: local
+# Flink V2服务配置
+flink:
+  v2:
+    # Flink集群地址
+    cluster-address: ${FLINK_CLUSTER_ADDRESS:127.0.0.1:8081}
+    # Flink历史服务器地址
+    history-address: ${FLINK_HISTORY_ADDRESS:127.0.0.1:8082}
+    # 默认并行度
+    parallelism: ${FLINK_DEFAULT_PARALLELISM:1}
+    # 作业提交超时时间（毫秒）
+    submit-timeout: ${FLINK_SUBMIT_TIMEOUT:60000}
+    # 默认检查点存储路径（不填时使用此默认值）
+    checkpoint-path: ${FLINK_CHECKPOINT_PATH:}
+
+
+# 日志配置
+logging:
+  level:
+    cn.iocoder.yudao.module.flink.v2: DEBUG
+    org.apache.flink: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+
+
+yudao:
+  info:
+    base-package: cn.iocoder.yudao

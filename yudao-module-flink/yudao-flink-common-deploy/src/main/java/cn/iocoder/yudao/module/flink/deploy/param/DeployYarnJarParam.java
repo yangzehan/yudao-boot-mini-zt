@@ -8,7 +8,11 @@ import org.apache.flink.configuration.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import java.util.List;
+
 /**
+ * Yarn JAR 作业部署参数
+ *
  * @author yzh
  */
 @AllArgsConstructor
@@ -19,7 +23,7 @@ public class DeployYarnJarParam implements DeployParam {
   private String jarFile;
 
   /** 远程 Flink lib 目录列表（HDFS 路径，如 hdfs://namenode:port/flink/lib） */
-  private java.util.List<String> remoteLibDirs;
+  private List<String> remoteLibDirs;
 
   private String entryPointClassName;
   private String[] argument;

@@ -1,8 +1,5 @@
 package cn.iocoder.yudao.module.flink.deploy.factory;
 
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.EnumUtil;
-import cn.hutool.core.util.ReflectUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
 import cn.iocoder.yudao.module.flink.common.deployer.factory.FlinkJobDeployerFactory;
 import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
@@ -11,6 +8,7 @@ import cn.iocoder.yudao.module.flink.deploy.enums.DeployModeEnum;
  * Flink作业执行工厂实现类
  * <p>
  * 使用静态内部类实现线程安全的单例模式
+ * 支持动态注册 YARN_APPLICATION 模式的部署器
  *
  * @author yzh
  */
@@ -35,10 +33,7 @@ public class FlinkJobDeployerFactoryImpl implements FlinkJobDeployerFactory {
 
     @Override
     public FlinkJobDeployer getDeployerFactoryByDeployMode(String deployMode) {
-        DeployModeEnum deployModeEnum = EnumUtil.getBy(DeployModeEnum::getDeployName, deployMode);
-        Assert.notNull(deployModeEnum, "无法接受该执行类型{}", deployMode);
-        Class<? extends FlinkJobDeployer> executorClass = deployModeEnum.getFlinkJobDeployClass();
-        return ReflectUtil.newInstance(executorClass);
+        return DeployModeEnum.getDeployer(deployMode);
     }
 
     /**

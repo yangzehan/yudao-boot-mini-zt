@@ -13,6 +13,7 @@ import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditS
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditConfigDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditVersionDO;
+import cn.iocoder.yudao.module.datastudio.dal.dataobject.flink.job.deploy.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditConfigMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditMapper;
 import cn.iocoder.yudao.module.datastudio.dal.mysql.file.SqlEditVersionMapper;
@@ -20,7 +21,6 @@ import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
 import cn.iocoder.yudao.module.datastudio.framework.flink.client.FlinkApiFactory;
 import cn.iocoder.yudao.module.datastudio.util.DeployUtil;
 import cn.iocoder.yudao.module.flink.common.api.FlinkApi;
-import cn.iocoder.yudao.module.flink.common.dal.dataobject.FlinkJobDeployDO;
 import cn.iocoder.yudao.module.flink.common.dto.FlinkConfig;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeploySqlReqDto;

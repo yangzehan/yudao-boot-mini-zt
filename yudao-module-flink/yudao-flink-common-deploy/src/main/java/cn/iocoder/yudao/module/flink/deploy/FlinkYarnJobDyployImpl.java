@@ -1,52 +1,49 @@
 package cn.iocoder.yudao.module.flink.deploy;
 
-import static cn.iocoder.yudao.module.flink.deploy.util.sql.SqlUtil.processScripts;
 import static cn.iocoder.yudao.module.flink.deploy.util.yarn.Utils.getYarnConfiguration;
-import static org.apache.flink.streaming.api.environment.ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
-import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
+import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
 import cn.iocoder.yudao.module.flink.deploy.base.AbstractFlinkJobDyploy;
-import cn.iocoder.yudao.module.flink.deploy.param.DeployYarnDataIngestionParam;
-import cn.iocoder.yudao.module.flink.deploy.param.DeployYarnJarParam;
-import cn.iocoder.yudao.module.flink.deploy.param.DeployYarnSqlParam;
+import cn.iocoder.yudao.module.flink.deploy.base.FlinkApplicationExecutor;
+import cn.iocoder.yudao.module.flink.deploy.constant.NacosConstant;
+import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployer;
+import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployerImpl;
+import cn.iocoder.yudao.module.flink.deploy.param.*;
 import cn.iocoder.yudao.module.flink.deploy.util.yarn.YarnClusterDescriptor;
-import cn.iocoder.yudao.module.flink.job.RpcJobStatusHook;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.deployment.ClusterSpecification;
-import org.apache.flink.client.deployment.executors.PipelineExecutorUtils;
-import org.apache.flink.client.program.*;
+import org.apache.flink.client.deployment.application.ApplicationConfiguration;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.PipelineOptions;
-import org.apache.flink.runtime.jobgraph.JobGraph;
-import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
+import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.runtime.messages.webmonitor.JobDetails;
+import org.apache.flink.runtime.messages.webmonitor.MultipleJobsDetails;
 import org.apache.flink.runtime.rest.messages.*;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.graph.StreamGraph;
-import org.apache.flink.table.api.bridge.java.StreamStatementSet;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.table.api.internal.TableEnvironmentImpl;
+import org.apache.flink.runtime.rest.util.RestMapperUtils;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
 import org.apache.flink.yarn.YarnClusterClientFactory;
-import org.apache.flink.yarn.entrypoint.YarnJobClusterEntrypoint;
+import org.apache.flink.yarn.entrypoint.YarnApplicationClusterEntryPoint;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.springframework.lang.NonNull;
@@ -57,6 +54,44 @@ import org.springframework.lang.NonNull;
 @Slf4j
 public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements FlinkJobDeployer {
   private static final String APPLICATION_MAIN_CLASS = "org.apache.flink.cdc.cli.CliExecutor";
+
+  private static JobDetails getJobDetails(
+      String trackingUrl,
+      ApplicationReport applicationReport,
+      YarnClient yarnClient,
+      int retryCount)
+      throws JsonProcessingException {
+    if (retryCount > 5) {
+      throw ServiceExceptionUtil.exception(new ErrorCode(9999, "获取作业详情失败"));
+    }
+    retryCount++;
+    String content = HttpUtil.get(trackingUrl + JobsOverviewHeaders.URL);
+    if (content == null) {
+      throw ServiceExceptionUtil.exception(new ErrorCode(9999, "获取作业详情失败"));
+    }
+    MultipleJobsDetails multipleJobsDetails =
+        RestMapperUtils.getStrictObjectMapper().readValue(content, MultipleJobsDetails.class);
+    if (multipleJobsDetails.getJobs().isEmpty()) {
+      try {
+        applicationReport = yarnClient.getApplicationReport(applicationReport.getApplicationId());
+        if (applicationReport.getYarnApplicationState().equals(YarnApplicationState.RUNNING)) {
+          Thread.sleep(1000L);
+          // 递归调用并返回结果
+          return getJobDetails(trackingUrl, applicationReport, yarnClient, retryCount);
+        }
+      } catch (Exception e) {
+        log.error("获取作业详情失败", e);
+        // 抛出异常而不是继续执行
+        throw ServiceExceptionUtil.exception(new ErrorCode(9999, "获取作业详情失败"), e);
+      }
+      // 如果不是RUNNING状态，抛出异常
+      throw ServiceExceptionUtil.exception(new ErrorCode(9999, "获取作业详情失败"));
+    }
+
+    JobDetails jobDetails = CollectionUtil.get(multipleJobsDetails.getJobs(), 0);
+
+    return jobDetails;
+  }
 
   @Override
   public JobDeployRespDto deploySql(DeployParam deployParam) {
@@ -73,79 +108,66 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
       configuration.setString("yarn.provided.lib.dirs", remoteLibDirs);
       log.info("配置远程 Flink lib 目录: {}", remoteLibDirs);
     }
-
-    LocalStreamEnvironment environment =
-        StreamExecutionEnvironment.createLocalEnvironment(configuration);
-
-    // 启用检查点配置（配置已通过Configuration传递）
-    if (configuration.contains(CHECKPOINTING_INTERVAL)) {
-      long checkpointInterval = configuration.get(CHECKPOINTING_INTERVAL).toMillis();
-      environment.enableCheckpointing(checkpointInterval);
-    }
-    // 设置 parallelism（配置已通过 Configuration 传递）
-    if (configuration.contains(CoreOptions.DEFAULT_PARALLELISM)) {
-      int parallelism = configuration.get(CoreOptions.DEFAULT_PARALLELISM);
-      environment.setParallelism(parallelism);
-    } else {
-      environment.setParallelism(1); // 默认1
-    }
-    StreamTableEnvironment stbEnv = StreamTableEnvironment.create(environment);
-    StreamStatementSet statementSet = stbEnv.createStatementSet();
-    TableEnvironmentImpl tbEnv = (TableEnvironmentImpl) stbEnv;
-    processScripts(yarnSqlParam.getSql(), tbEnv, statementSet);
-    log.info("生成JobGraph");
-    StreamGraph streamGraph = environment.getStreamGraph(true);
-    streamGraph.setJobName(yarnSqlParam.getJobName());
-    log.info("注册作业状态监控 Hook");
-    streamGraph.registerJobStatusHook(
-        new RpcJobStatusHook(
-            SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
-            SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace")));
-    final JobGraph jobGraph;
-    try {
-      jobGraph =
-          PipelineExecutorUtils.getJobGraph(
-              streamGraph, configuration, this.getClass().getClassLoader());
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
-    log.info("完成jobGraph构建");
+    log.info("构建ApplicationConfiguration");
+    configuration.set(
+        PipelineOptions.JARS,
+        Collections.singletonList(
+            "hdfs://localhost:9000/flink/flink1.18/app/yudao-flink-common-deploy-2025.10-jdk8-SNAPSHOT.jar"));
+    String[] programArguments = new String[4];
+    DeployLocalSqlParam param = new DeployLocalSqlParam();
+    param.setSql(yarnSqlParam.getSql());
+    param.setJobName(yarnSqlParam.getJobName());
+    param.setConfiguration(null);
+    programArguments[0] = JSONUtil.toJsonStr(param);
+    programArguments[1] = JobTypeEnum.FLINK_SQL.name();
+    programArguments[2] = NacosConstant.getDiscoveryServerAddr();
+    programArguments[3] = NacosConstant.getDiscoveryNamespace();
+    new ApplicationConfiguration(programArguments, FlinkApplicationExecutor.class.getName())
+        .applyToConfiguration(configuration);
     YarnClusterDescriptor clusterDescriptor =
         getClusterDescriptor(
             configuration,
             yarnSqlParam.getYarnSitePath(),
             yarnSqlParam.getHdfsSitePath(),
             yarnSqlParam.getCoreSitePath());
+    log.info("构建ApplicationConfiguration完成");
 
     ClusterSpecification clusterSpecification =
         new YarnClusterClientFactory().getClusterSpecification(configuration);
+
     try {
       ClusterClientProvider<ApplicationId> flinkApplicationCluster =
           clusterDescriptor.deployInternal(
               clusterSpecification,
-              "Flink per-job cluster",
-              YarnJobClusterEntrypoint.class.getName(),
-              jobGraph,
+              "Flink application cluster",
+              YarnApplicationClusterEntryPoint.class.getName(),
+              null,
               true);
+
       ClusterClient<ApplicationId> clusterClient = flinkApplicationCluster.getClusterClient();
+
       Map<String, String> config = clusterClient.getFlinkConfiguration().toMap();
-      String trackingUrl =
-          clusterDescriptor
-              .getYarnClient()
-              .getApplicationReport(clusterClient.getClusterId())
-              .getTrackingUrl();
+      JobDeployRespDto respDto = new JobDeployRespDto();
+
+      ApplicationReport applicationReport =
+          clusterDescriptor.getYarnClient().getApplicationReport(clusterClient.getClusterId());
+      String trackingUrl = applicationReport.getTrackingUrl();
+
+      JobDetails jobDetails =
+          getJobDetails(trackingUrl, applicationReport, clusterDescriptor.getYarnClient(), 0);
+
       config.put("webUiUrl", trackingUrl);
-      JobDeployRespDto respDto =
-          new JobDeployRespDto()
-              .setJobId(jobGraph.getJobID().toString())
-              .setJobName(jobGraph.getName())
-              .setWebInterfaceUrl(trackingUrl)
-              .setConfig(config)
-              .setSubmitStatus(true)
-              .setSubmitTime(LocalDateTimeUtil.now())
-              .setDeployMode("yarn-application")
-              .setMessage("部署成功")
-              .setFlinkClusterId(String.valueOf(clusterClient.getClusterId()));
+
+      respDto
+          .setJobId(jobDetails.getJobId().toString())
+          .setJobName(jobDetails.getJobName())
+          .setWebInterfaceUrl(trackingUrl)
+          .setConfig(config)
+          .setSubmitStatus(true)
+          .setSubmitTime(LocalDateTimeUtil.now())
+          .setDeployMode("yarn-application")
+          .setMessage("部署成功")
+          .setFlinkClusterId(String.valueOf(clusterClient.getClusterId()));
 
       return respDto;
 
@@ -156,33 +178,13 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
   }
 
   @Override
-  public JobDeployRespDto deployJar(DeployParam deployParam) {
+  public JobDeployRespDto deployJar(DeployParam deployParam, boolean async) {
     DeployYarnJarParam yarnJarParam = validateParam(deployParam, DeployYarnJarParam.class);
-    log.info("开始 flink on yarn 作业部署");
+    log.info("开始 flink on yarn 作业部署，使用 FlinkApplicationExecutor");
     Configuration configuration = yarnJarParam.getConfiguration();
     if (ObjUtil.isNull(configuration)) {
       configuration = new Configuration();
     }
-
-    PackagedProgram program = null;
-    try {
-      program =
-          PackagedProgram.newBuilder()
-              .setJarFile(new File(yarnJarParam.getJarFile()))
-              .setEntryPointClassName(yarnJarParam.getEntryPointClassName())
-              .setArguments(yarnJarParam.getArgument())
-              .setSavepointRestoreSettings(SavepointRestoreSettings.none())
-              .build();
-    } catch (ProgramInvocationException e) {
-      throw new RuntimeException(e);
-    }
-    log.info("设置有效配置信息");
-    // 设置作业名称
-
-    configuration.set(PipelineOptions.NAME, yarnJarParam.getJobName());
-    configuration.set(
-        PipelineOptions.JARS,
-        Collections.singletonList(new File(yarnJarParam.getJarFile()).toURI().toString()));
 
     // 配置远程 Flink lib 目录（从 HDFS 加载，节省上传带宽）
     if (yarnJarParam.getRemoteLibDirs() != null && !yarnJarParam.getRemoteLibDirs().isEmpty()) {
@@ -190,26 +192,39 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
       configuration.setString("yarn.provided.lib.dirs", remoteLibDirs);
       log.info("配置远程 Flink lib 目录: {}", remoteLibDirs);
     }
-    log.info("生成JobGraph");
+
+    // 构建 DeployLocalJarParam 参数
+    DeployRemoteJarParam remoteJarParam = new DeployRemoteJarParam();
+    remoteJarParam.setConfiguration(configuration);
+    remoteJarParam.setEntryPointClassName(yarnJarParam.getEntryPointClassName());
+    remoteJarParam.setArgument(yarnJarParam.getArgument());
+    remoteJarParam.setJobName(yarnJarParam.getJobName());
+    Path tureJarPath = new Path(yarnJarParam.getJarFile());
+    remoteJarParam.setJarFile(tureJarPath.getName());
+    // 将参数序列化为 JSON
+    String programArgJson = JSONUtil.toJsonStr(remoteJarParam);
+
+    // 构建 ApplicationConfiguration
+    String[] programArguments = new String[4];
+    programArguments[0] = programArgJson;
+    programArguments[1] = JobTypeEnum.JAR.name();
+    programArguments[2] = NacosConstant.getDiscoveryServerAddr();
+    programArguments[3] = NacosConstant.getDiscoveryNamespace();
+    // 配置作业名称
     configuration.set(PipelineOptions.NAME, yarnJarParam.getJobName());
-    JobGraph jobGraph = null;
-    // 获取 parallelism 配置，默认1
-    int parallelism = 1;
-    if (configuration.contains(CoreOptions.DEFAULT_PARALLELISM)) {
-      parallelism = configuration.get(CoreOptions.DEFAULT_PARALLELISM);
-    }
-    try {
-      jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, parallelism, false);
-    } catch (ProgramInvocationException e) {
-      throw new RuntimeException(e);
-    }
-    log.info("注册作业状态监控 Hook");
-    jobGraph.setJobStatusHooks(
+
+    // 配置 PipelineOptions.JARS（用于本地打包）
+
+    configuration.set(
+        PipelineOptions.JARS,
         Collections.singletonList(
-            new RpcJobStatusHook(
-                SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
-                SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"))));
-    log.info("完成jobGraph构建");
+            "hdfs://localhost:9000/flink/flink1.18/app/yudao-flink-common-deploy-2025.10-jdk8-SNAPSHOT.jar"));
+
+    // 应用 ApplicationConfiguration
+    new ApplicationConfiguration(programArguments, FlinkApplicationExecutor.class.getName())
+        .applyToConfiguration(configuration);
+
+    configuration.set(RestOptions.BIND_PORT, "40001");
 
     YarnClusterDescriptor clusterDescriptor =
         getClusterDescriptor(
@@ -220,26 +235,37 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
 
     ClusterSpecification clusterSpecification =
         new YarnClusterClientFactory().getClusterSpecification(configuration);
+
     try {
+      // 使用 YarnJobClusterEntrypoint 配合 FlinkApplicationExecutor 提交作业
+
+      clusterDescriptor.addUserJar(tureJarPath);
+
       ClusterClientProvider<ApplicationId> flinkApplicationCluster =
           clusterDescriptor.deployInternal(
               clusterSpecification,
-              "Flink per-job cluster",
-              YarnJobClusterEntrypoint.class.getName(),
-              jobGraph,
+              "Flink application cluster",
+              YarnApplicationClusterEntryPoint.class.getName(),
+              null,
               true);
+
       ClusterClient<ApplicationId> clusterClient = flinkApplicationCluster.getClusterClient();
       Map<String, String> config = clusterClient.getFlinkConfiguration().toMap();
-      String trackingUrl =
-          clusterDescriptor
-              .getYarnClient()
-              .getApplicationReport(clusterClient.getClusterId())
-              .getTrackingUrl();
+
+      ApplicationReport applicationReport =
+          clusterDescriptor.getYarnClient().getApplicationReport(clusterClient.getClusterId());
+      String trackingUrl = applicationReport.getTrackingUrl();
+
+      // 等待作业启动并获取 JobDetails
+      JobDetails jobDetails =
+          getJobDetails(trackingUrl, applicationReport, clusterDescriptor.getYarnClient(), 0);
+
       config.put("webUiUrl", trackingUrl);
+
       JobDeployRespDto respDto =
           new JobDeployRespDto()
-              .setJobId(jobGraph.getJobID().toString())
-              .setJobName(jobGraph.getName())
+              .setJobId(jobDetails.getJobId().toString())
+              .setJobName(jobDetails.getJobName())
               .setWebInterfaceUrl(trackingUrl)
               .setConfig(config)
               .setSubmitStatus(true)
@@ -252,8 +278,8 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
 
     } catch (Exception e) {
       log.error("部署失败", e);
+      throw new RuntimeException(e);
     }
-    return null;
   }
 
   public YarnClusterDescriptor getClusterDescriptor(
@@ -306,90 +332,9 @@ public class FlinkYarnJobDyployImpl extends AbstractFlinkJobDyploy implements Fl
 
   @Override
   public JobDeployRespDto deployDataIngestion(DeployParam deployParam) {
-    log.info("开始部署flink on yarn application 模式数据集成作业");
-    DeployYarnDataIngestionParam deployYarnParam =
+    DeployYarnDataIngestionParam yarnParam =
         validateParam(deployParam, DeployYarnDataIngestionParam.class);
-    // 需要验证PipelineOptions.JARS是否已经存在值
-    Configuration configuration = deployYarnParam.getConfiguration();
-    if (configuration.get(PipelineOptions.JARS) == null) {
-      throw ServiceExceptionUtil.exception(new ErrorCode(9999, "没有定义CDC dist jar包"));
-    }
-    // 配置远程 Flink lib 目录（从 HDFS 加载，节省上传带宽）
-    if (deployYarnParam.getRemoteLibDirs() != null
-        && !deployYarnParam.getRemoteLibDirs().isEmpty()) {
-      String remoteLibDirs = String.join(",", deployYarnParam.getRemoteLibDirs());
-      configuration.setString("yarn.provided.lib.dirs", remoteLibDirs);
-      log.info("配置远程 Flink lib 目录: {}", remoteLibDirs);
-    }
-    configuration.set(PipelineOptions.NAME, deployYarnParam.getJobName());
-    log.info("构建 cdc jobGraph");
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    PackagedProgram program = null;
-    // 获取 parallelism 配置，默认1
-    int parallelism = 1;
-    if (configuration.contains(CoreOptions.DEFAULT_PARALLELISM)) {
-      parallelism = configuration.get(CoreOptions.DEFAULT_PARALLELISM);
-    }
-    try {
-      program =
-          PackagedProgram.newBuilder()
-              .setJarFile(new File(deployYarnParam.getCdcDistJarPath()))
-              .setEntryPointClassName(APPLICATION_MAIN_CLASS)
-              .setArguments(mapper.readTree(deployYarnParam.getContent()).toString())
-              .setSavepointRestoreSettings(SavepointRestoreSettings.none())
-              .build();
-      JobGraph jobGraph =
-          PackagedProgramUtils.createJobGraph(program, configuration, parallelism, false);
-      jobGraph.setJobStatusHooks(
-          Collections.singletonList(
-              new RpcJobStatusHook(
-                  SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"),
-                  SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"))));
-
-      log.info("构建 cdc jobGraph成功");
-      YarnClusterDescriptor clusterDescriptor =
-          getClusterDescriptor(
-              configuration,
-              deployYarnParam.getYarnSitePath(),
-              deployYarnParam.getHdfsSitePath(),
-              deployYarnParam.getCoreSitePath());
-
-      ClusterSpecification clusterSpecification =
-          new YarnClusterClientFactory().getClusterSpecification(configuration);
-
-      ClusterClientProvider<ApplicationId> flinkApplicationCluster =
-          clusterDescriptor.deployInternal(
-              clusterSpecification,
-              "Flink per-job cluster",
-              YarnJobClusterEntrypoint.class.getName(),
-              jobGraph,
-              true);
-      ClusterClient<ApplicationId> clusterClient = flinkApplicationCluster.getClusterClient();
-      Map<String, String> config = clusterClient.getFlinkConfiguration().toMap();
-      String trackingUrl =
-          clusterDescriptor
-              .getYarnClient()
-              .getApplicationReport(clusterClient.getClusterId())
-              .getTrackingUrl();
-      config.put("webUiUrl", trackingUrl);
-      JobDeployRespDto respDto =
-          new JobDeployRespDto()
-              .setJobId(jobGraph.getJobID().toString())
-              .setJobName(jobGraph.getName())
-              .setWebInterfaceUrl(trackingUrl)
-              .setConfig(config)
-              .setSubmitStatus(true)
-              .setSubmitTime(LocalDateTimeUtil.now())
-              .setDeployMode("yarn-application")
-              .setMessage("部署成功")
-              .setFlinkClusterId(String.valueOf(clusterClient.getClusterId()));
-      return respDto;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    } finally {
-      if (ObjUtil.isNotNull(program)) {
-        program.close();
-      }
-    }
+    DataIngestionDeployer dataIngestionDeployer = new DataIngestionDeployerImpl();
+    return dataIngestionDeployer.deployYarn(yarnParam);
   }
 }

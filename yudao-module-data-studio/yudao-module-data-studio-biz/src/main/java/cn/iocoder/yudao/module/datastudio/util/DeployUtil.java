@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.datastudio.util;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.iocoder.yudao.module.datastudio.controller.admin.job.vo.JobDeployReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.dataIngestion.DataIngestionConfigDO;
@@ -37,8 +38,14 @@ public class DeployUtil {
   private FlinkConfig buildFlinkConfig(
       String deployMode, FlinkConfig flinkConfig, FlinkClusterDO flinkCluster) {
     HashMap<String, String> exConfig = new HashMap<>();
+    Map<String, String> config = flinkConfig.getExtendedConfig();
     switch (deployMode) {
       case "local":
+        if (CollectionUtil.isEmpty(config)) {
+          exConfig.put("rest.address", "localhost");
+          exConfig.put("rest.bind-port", "7000,10000");
+          flinkConfig.setExtendedConfig(exConfig);
+        }
         break;
       case "yarn-session":
         break;
@@ -48,8 +55,11 @@ public class DeployUtil {
         flinkConfig.setYarnSitePath(flinkCluster.getYarnSitePath());
         flinkConfig.setHdfsSitePath(flinkCluster.getHdfsSitePath());
         flinkConfig.setCoreSitePath(flinkCluster.getCoreSitePath());
-
         putMapIfNotNull(exConfig, "yarn.provided.lib.dirs", flinkCluster.getYarnProvidedLibDirs());
+        putMapIfNotNull(
+            exConfig,
+            "$internal.application.main",
+            "cn.iocoder.yudao.module.flink.deploy.base.FlinkApplicationExecutor");
         putMapIfNotNull(
             exConfig, "yarn.provided.usrlib.dir", flinkCluster.getYarnProvidedUsrLibDir());
         putMapIfNotNull(
@@ -64,10 +74,10 @@ public class DeployUtil {
         exConfig.put(
             "taskmanager.numberOfTaskSlots",
             flinkCluster.getTaskmanagerNumberOfTaskSlots().toString());
-        if (ObjUtil.isNull(flinkConfig.getExtendedConfig())) {
+        if (ObjUtil.isNull(config)) {
           flinkConfig.setExtendedConfig(exConfig);
         } else {
-          flinkConfig.getExtendedConfig().putAll(exConfig);
+          config.putAll(exConfig);
         }
         break;
       case "remote":

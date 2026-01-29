@@ -59,7 +59,7 @@ public class FlinkJobDeployServiceImpl implements FlinkJobDeployService {
     // 构建执行参数
     DeployParam deployParam = ExecuteParamFactory.createByJobSubmitJarReqDto(request);
     // 执行作业并获取结果
-    return deployer.deployJar(deployParam);
+    return deployer.deployJar(deployParam, true);
   }
 
   @Override

@@ -1,39 +1,40 @@
 package cn.iocoder.yudao.module.flink.deploy.util.sql;
 
-import cn.iocoder.yudao.framework.common.exception.ErrorCode;
-import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
+import static cn.iocoder.yudao.module.flink.deploy.util.sql.FlinkSqlScriptExecutor.execute;
+
 import org.apache.flink.table.api.bridge.java.StreamStatementSet;
 import org.apache.flink.table.api.internal.TableEnvironmentImpl;
-import org.apache.flink.table.operations.ModifyOperation;
-import org.apache.flink.table.operations.Operation;
-import org.apache.flink.table.operations.ShowOperation;
-import org.apache.flink.table.planner.operations.PlannerQueryOperation;
 
 /**
+ * SQL 执行工具类
+ *
+ * <p>提供 SQL 脚本执行功能，内部委托给 {@link FlinkSqlScriptExecutor}。</p>
+ *
  * @author yzh
  */
 public class SqlUtil {
+
+  /**
+   * 处理 SQL 脚本
+   *
+   * <p>将 SQL 脚本解析并执行，支持：
+   * <ul>
+   *   <li>DML 语句 - INSERT INTO</li>
+   *   <li>DDL 语句 - CREATE/DROP/ALTER TABLE 等</li>
+   *   <li>配置语句 - SET/RESET</li>
+   *   <li>USE 语句</li>
+   * </ul>
+   *
+   * @param sqlScripts    SQL 脚本内容
+   * @param tbEnv         TableEnvironment 实例
+   * @param statementSet  StatementSet 实例
+   * @return TableEnvironmentImpl 实例
+   * @deprecated 请使用 {@link FlinkSqlScriptExecutor#execute(String, TableEnvironmentImpl, StreamStatementSet)}
+   */
+  @Deprecated
   public static TableEnvironmentImpl processScripts(
       String sqlScripts, TableEnvironmentImpl tbEnv, StreamStatementSet statementSet) {
-    boolean useStatementSet = false;
-    String[] statements =
-        cn.iocoder.yudao.module.flink.common.util.SqlUtil.getStatements(sqlScripts);
-    for (String statement : statements) {
-      Operation operation = tbEnv.getParser().parse(statement).get(0);
-      if (operation instanceof ModifyOperation) {
-        statementSet.addInsertSql(statement);
-        useStatementSet = true;
-      } else if (operation instanceof ShowOperation || operation instanceof PlannerQueryOperation) {
-        throw ServiceExceptionUtil.exception(
-            new ErrorCode(9999, "不支持的Show SQL 或 SELECT SQL 类型{}"), operation.getClass().getName());
-      } else {
-        tbEnv.executeSql(statement);
-      }
-    }
-    if (useStatementSet) {
-      statementSet.attachAsDataStream();
-    }
-
+    execute(sqlScripts, tbEnv, statementSet);
     return tbEnv;
   }
 }

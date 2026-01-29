@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.flink.v118;
 
+import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
+import cn.iocoder.yudao.module.flink.deploy.constant.NacosConstant;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -35,5 +37,9 @@ public class Flink118Application {
             + "  服务地址: http://localhost:8085\n"
             + "  管理端点: http://localhost:8085/actuator\n"
             + " ----------------------------------------------------------------------------\n");
+    NacosConstant.setDiscoveryNamespace(
+        SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"));
+    NacosConstant.setDiscoveryServerAddr(
+        SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"));
   }
 }
