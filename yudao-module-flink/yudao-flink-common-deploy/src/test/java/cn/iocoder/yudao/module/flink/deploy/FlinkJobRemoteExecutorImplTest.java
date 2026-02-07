@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.flink.deploy;
 
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobRemoteDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployRemoteJarParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployRemoteSqlParam;
 import org.apache.flink.configuration.Configuration;

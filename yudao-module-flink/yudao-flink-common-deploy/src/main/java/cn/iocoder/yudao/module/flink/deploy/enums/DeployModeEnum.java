@@ -2,9 +2,9 @@ package cn.iocoder.yudao.module.flink.deploy.enums;
 
 import cn.hutool.core.util.ReflectUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.FlinkJobDeployer;
-import cn.iocoder.yudao.module.flink.deploy.FlinkJobLocalDeployerImpl;
-import cn.iocoder.yudao.module.flink.deploy.FlinkJobRemoteDeployerImpl;
-import cn.iocoder.yudao.module.flink.deploy.FlinkYarnJobDyployImpl;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobLocalDeployerImpl;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobRemoteDeployerImpl;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkYarnJobDyployImpl;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +12,8 @@ import lombok.Getter;
 
 /**
  * Flink 部署模式枚举
- * <p>
- * 支持动态注册 YARN_APPLICATION 模式的部署器，以便不同 Flink 版本可以使用各自的实现。
+ *
+ * <p>支持动态注册 YARN_APPLICATION 模式的部署器，以便不同 Flink 版本可以使用各自的实现。
  *
  * @author yzh
  */
@@ -25,7 +25,8 @@ public enum DeployModeEnum {
   YARN_APPLICATION("yarn-application", FlinkYarnJobDyployImpl.class),
   ;
 
-  private static final Map<String, Class<? extends FlinkJobDeployer>> DYNAMIC_DEPLOYERS = new ConcurrentHashMap<>();
+  private static final Map<String, Class<? extends FlinkJobDeployer>> DYNAMIC_DEPLOYERS =
+      new ConcurrentHashMap<>();
   private static final Map<String, FlinkJobDeployer> DEPLOYER_INSTANCES = new ConcurrentHashMap<>();
 
   static {
@@ -33,14 +34,10 @@ public enum DeployModeEnum {
     loadSpiDeployers();
   }
 
-  /**
-   * 部署模式名称
-   */
+  /** 部署模式名称 */
   private final String deployName;
 
-  /**
-   * 部署器类（对于 YARN_APPLICATION 可能为 null，需要从动态注册表查找）
-   */
+  /** 部署器类（对于 YARN_APPLICATION 可能为 null，需要从动态注册表查找） */
   private final Class<? extends FlinkJobDeployer> flinkJobDeployClass;
 
   DeployModeEnum(String deployName, Class<? extends FlinkJobDeployer> flinkJobDeployClass) {
@@ -51,10 +48,11 @@ public enum DeployModeEnum {
   /**
    * 动态注册 YARN 应用程序部署器
    *
-   * @param deployMode    部署模式名称（如 "yarn-application"）
+   * @param deployMode 部署模式名称（如 "yarn-application"）
    * @param deployerClass 部署器实现类
    */
-  public static void registerApplicationDeployer(String deployMode, Class<? extends FlinkJobDeployer> deployerClass) {
+  public static void registerApplicationDeployer(
+      String deployMode, Class<? extends FlinkJobDeployer> deployerClass) {
     DYNAMIC_DEPLOYERS.put(deployMode, deployerClass);
     // 清除缓存的实例，以便下次获取时使用新的类
     DEPLOYER_INSTANCES.remove(deployMode);
@@ -130,9 +128,7 @@ public enum DeployModeEnum {
     return DYNAMIC_DEPLOYERS.containsKey(deployMode);
   }
 
-  /**
-   * 加载 SPI 注册的部署器
-   */
+  /** 加载 SPI 注册的部署器 */
   private static void loadSpiDeployers() {
     try {
       ServiceLoader<FlinkJobDeployer> serviceLoader = ServiceLoader.load(FlinkJobDeployer.class);

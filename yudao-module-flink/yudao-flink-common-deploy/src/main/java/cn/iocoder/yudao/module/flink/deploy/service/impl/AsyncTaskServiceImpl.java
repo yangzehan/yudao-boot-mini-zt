@@ -53,16 +53,24 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
   @Override
   public void monitorEnvByJobClient(JobClient jobClient, StreamExecutionEnvironment env)
       throws Exception {
-    jobClient.getJobExecutionResult().get();
-    env.close();
+    createExecutorService();
+    executorService.submit(
+        () -> {
+          try (StreamExecutionEnvironment ignored = env) {
+            jobClient.getJobExecutionResult().get();
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   @Override
   public void monitorClusters(MiniCluster miniCluster, boolean async) {
     if (async) {
       monitorClustersAsync(miniCluster);
+    } else {
+      monitorClustersSync(miniCluster);
     }
-    monitorClustersSync(miniCluster);
   }
 
   public void monitorClustersSync(MiniCluster miniCluster) {
@@ -73,6 +81,7 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
           if (isDone) {
             miniCluster.close();
             log.info("作业 [{}] 已进入终态，关闭 MiniCluster", jobStatusMessage.getJobId());
+            Thread.sleep(5000);
             break;
           }
         }

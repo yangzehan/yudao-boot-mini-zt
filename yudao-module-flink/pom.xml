@@ -25,6 +25,8 @@
 
     <properties>
         <flink.scope>compile</flink.scope>
+        <hadoop.version>3.3.6</hadoop.version>
+        <hadoop.scope>compile</hadoop.scope>
     </properties>
 
     <profiles>
@@ -35,6 +37,7 @@
             </activation>
             <properties>
                 <flink.scope>compile</flink.scope>
+                <hadoop.scope>compile</hadoop.scope>
                 <shade.plugin.skip>true</shade.plugin.skip>
             </properties>
         </profile>
@@ -42,6 +45,7 @@
             <id>prod</id>
             <properties>
                 <flink.scope>provided</flink.scope>
+                <hadoop.scope>provided</hadoop.scope>
                 <shade.plugin.skip>false</shade.plugin.skip>
             </properties>
         </profile>

@@ -1,9 +1,9 @@
 package cn.iocoder.yudao.module.flink.deploy.base;
 
+import static cn.iocoder.yudao.module.flink.deploy.enums.FlinkDeployErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.flink.deploy.util.sql.FlinkSqlScriptExecutor.execute;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
-import cn.iocoder.yudao.framework.common.exception.ErrorCode;
 import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
 import cn.iocoder.yudao.module.flink.common.deployer.DeployParam;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
@@ -53,7 +53,7 @@ public abstract class AbstractFlinkJobDyploy {
         clusterClient.shutDownCluster();
       }
     } catch (ClusterRetrieveException e) {
-      throw new RuntimeException(e);
+      throw ServiceExceptionUtil.exception(CLUSTER_RETRIEVE_FAILED, e);
     }
   }
 
@@ -108,7 +108,7 @@ public abstract class AbstractFlinkJobDyploy {
 
       return respDto;
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw ServiceExceptionUtil.exception(JOB_SUBMIT_FAILED, e);
     }
   }
 
@@ -123,7 +123,7 @@ public abstract class AbstractFlinkJobDyploy {
    * @param sqlParam SQL执行参数
    * @param environment StreamExecutionEnvironment（由子类提供）
    */
-  protected <ClusterID> JobDeployRespDto executeSqlTemplate(
+  protected JobDeployRespDto executeSqlTemplate(
       DeploySqlParam sqlParam, StreamExecutionEnvironment environment) {
     StreamTableEnvironment stbEnv = StreamTableEnvironment.create(environment);
     StreamStatementSet statementSet = stbEnv.createStatementSet();
@@ -162,7 +162,7 @@ public abstract class AbstractFlinkJobDyploy {
       log.info("sql作业已提交，作业ID: {}", jobClient.getJobID());
       return respDto;
     } catch (Exception e) {
-      throw new RuntimeException("执行Flink SQL作业时发生错误: " + e.getMessage(), e);
+      throw ServiceExceptionUtil.exception(SQL_EXECUTION_FAILED, e);
     }
   }
 
@@ -179,7 +179,7 @@ public abstract class AbstractFlinkJobDyploy {
   protected <T extends DeployParam> T validateParam(DeployParam param, Class<T> expectedType) {
     if (!expectedType.isInstance(param)) {
       throw ServiceExceptionUtil.exception(
-          new ErrorCode(9999, "不支持此类型执行参数{}，期望类型: {}"),
+          UNSUPPORTED_DEPLOY_PARAM_TYPE,
           param.getClass().getName(),
           expectedType.getName());
     }

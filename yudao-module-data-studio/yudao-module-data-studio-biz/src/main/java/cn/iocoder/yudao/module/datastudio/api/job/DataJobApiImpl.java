@@ -12,7 +12,12 @@ import cn.iocoder.yudao.module.datastudio.dal.dataobject.flink.job.deploy.FlinkJ
 import cn.iocoder.yudao.module.datastudio.dal.mysql.job.DataJobMapper;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DataJobApiImpl implements DataJobApi {
   @Resource private DataJobMapper dataJobMapper;
   @Resource private RedisTemplate<Object, Object> redisTemplate;
+  @Resource private cn.iocoder.yudao.module.datastudio.dal.mysql.flinkcluster.FlinkClusterMapper flinkClusterMapper;
 
   @Override
   @TenantIgnore
@@ -85,14 +91,39 @@ public class DataJobApiImpl implements DataJobApi {
     if (CollectionUtil.isEmpty(dos)) {
       return CommonResult.success(Collections.emptyList());
     }
+
+    // Step 1: 提取 clusterId 集合
+    Set<Long> clusterIds = dos.stream()
+        .map(FlinkJobDeployDO::getClusterId)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+
+    // Step 2: 批量查询 FlinkClusterDO
+    Map<Long, cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO> clusterMap = new HashMap<>();
+    if (CollectionUtil.isNotEmpty(clusterIds)) {
+      List<cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO> clusters = flinkClusterMapper.selectBatchIds(clusterIds);
+      for (cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO cluster : clusters) {
+        clusterMap.put(cluster.getId(), cluster);
+      }
+    }
+
+    // Step 3: 构建 DataJobDto 列表
     List<DataJobDto> dataJobDtos = new ArrayList<>();
     for (FlinkJobDeployDO deployDO : dos) {
+      // 从 FlinkClusterDO 中提取 YARN 配置路径
+      cn.iocoder.yudao.module.datastudio.dal.dataobject.flinkcluster.FlinkClusterDO cluster = clusterMap.get(deployDO.getClusterId());
+
       DataJobDto dataJobDto =
           new DataJobDto(
               deployDO.getConfig(),
               deployDO.getJobId(),
               deployDO.getWebUiUrl(),
-              deployDO.getFlinkClusterId());
+              deployDO.getFlinkClusterId(),
+              deployDO.getClusterId(),
+              cluster != null ? cluster.getYarnSitePath() : null,
+              cluster != null ? cluster.getHdfsSitePath() : null,
+              cluster != null ? cluster.getCoreSitePath() : null);
+
       dataJobDtos.add(dataJobDto);
     }
     return CommonResult.success(dataJobDtos);

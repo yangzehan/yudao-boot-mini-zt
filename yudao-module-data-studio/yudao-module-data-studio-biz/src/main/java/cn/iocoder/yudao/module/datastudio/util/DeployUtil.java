@@ -43,8 +43,11 @@ public class DeployUtil {
       case "local":
         if (CollectionUtil.isEmpty(config)) {
           exConfig.put("rest.address", "localhost");
-          exConfig.put("rest.bind-port", "7000,10000");
+          exConfig.put("rest.bind-port", "3000-10000");
+          exConfig.put("execution.target", "local");
           flinkConfig.setExtendedConfig(exConfig);
+        } else {
+          config.put("execution.target", "local");
         }
         break;
       case "yarn-session":

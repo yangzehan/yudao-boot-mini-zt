@@ -177,13 +177,14 @@ public final class ExecuteParamFactory {
 
     if (StrUtil.isNotEmpty(restBindPort)) {
       Iterator<Integer> range = NetUtils.getPortRangeFromString(restBindPort);
-      range.forEachRemaining(
-          port -> {
-            if (NetUtil.isUsableLocalPort(port)) {
-              effectiveConfiguration.setString("rest.port", String.valueOf(port));
-              effectiveConfiguration.removeConfig(RestOptions.BIND_PORT);
-            }
-          });
+      while (range.hasNext()) {
+        Integer port = range.next();
+        if (NetUtil.isUsableLocalPort(port)) {
+          effectiveConfiguration.setString("rest.port", String.valueOf(port));
+          effectiveConfiguration.removeConfig(RestOptions.BIND_PORT);
+          break;
+        }
+      }
     }
 
     return effectiveConfiguration;

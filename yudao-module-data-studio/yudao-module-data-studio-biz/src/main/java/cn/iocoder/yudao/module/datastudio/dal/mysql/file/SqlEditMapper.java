@@ -1,15 +1,11 @@
 package cn.iocoder.yudao.module.datastudio.dal.mysql.file;
 
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.file.SqlEditListReqVO;
 import cn.iocoder.yudao.module.datastudio.dal.dataobject.file.SqlEditDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.Collection;
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * SQL 编辑器 Mapper
@@ -19,68 +15,71 @@ import java.util.List;
 @Mapper
 public interface SqlEditMapper extends BaseMapperX<SqlEditDO> {
 
-    /**
-     * 根据父ID查询文件列表
-     *
-     * @param parentId 父ID
-     * @return 文件列表
-     */
-    default List<SqlEditDO> selectListByParentId(Long parentId) {
-        return selectList(SqlEditDO::getParentId, parentId, SqlEditDO::getSort, "asc");
-    }
+  /**
+   * 根据父ID查询文件列表
+   *
+   * @param parentId 父ID
+   * @return 文件列表
+   */
+  default List<SqlEditDO> selectListByParentId(Long parentId) {
+    return selectList(SqlEditDO::getParentId, parentId, SqlEditDO::getSort, "asc");
+  }
 
-    /**
-     * 根据父ID集合查询文件列表
-     *
-     * @param parentIds 父ID集合
-     * @return 文件列表
-     */
-    default List<SqlEditDO> selectListByParentIdIn(Collection<Long> parentIds) {
-        return selectList(SqlEditDO::getParentId, parentIds);
-    }
+  /**
+   * 根据父ID集合查询文件列表
+   *
+   * @param parentIds 父ID集合
+   * @return 文件列表
+   */
+  default List<SqlEditDO> selectListByParentIdIn(Collection<Long> parentIds) {
+    return selectList(SqlEditDO::getParentId, parentIds);
+  }
 
-    /**
-     * 根据文件类型查询文件列表
-     *
-     * @param type 文件类型
-     * @return 文件列表
-     */
-    default List<SqlEditDO> selectListByType(String type) {
-        return selectList(SqlEditDO::getType, type);
-    }
+  /**
+   * 根据文件类型查询文件列表
+   *
+   * @param type 文件类型
+   * @return 文件列表
+   */
+  default List<SqlEditDO> selectListByType(String type) {
+    return selectList(SqlEditDO::getType, type);
+  }
 
-    /**
-     * 根据文件路径查询文件
-     *
-     * @param filePath 文件路径
-     * @return 文件
-     */
-    default SqlEditDO selectByFilePath(String filePath) {
-        return selectOne(SqlEditDO::getFilePath, filePath);
-    }
+  /**
+   * 根据文件路径查询文件
+   *
+   * @param filePath 文件路径
+   * @return 文件
+   */
+  default SqlEditDO selectByFilePath(String filePath) {
+    return selectOne(SqlEditDO::getFilePath, filePath);
+  }
 
-    /**
-     * 搜索文件列表
-     *
-     * @param keyword 关键词
-     * @return 文件列表
-     */
-    default List<SqlEditDO> selectListByKeyword(String keyword) {
-        return selectList(new LambdaQueryWrapperX<SqlEditDO>()
-                .likeIfPresent(SqlEditDO::getName, keyword)
-                .orderByAsc(SqlEditDO::getSort));
-    }
+  /**
+   * 搜索文件列表
+   *
+   * @param keyword 关键词
+   * @return 文件列表
+   */
+  default List<SqlEditDO> selectListByKeyword(String keyword) {
+    return selectList(
+        new LambdaQueryWrapperX<SqlEditDO>()
+            .likeIfPresent(SqlEditDO::getName, keyword)
+            .orderByAsc(SqlEditDO::getSort));
+  }
 
-    /**
-     * 获取根目录文件列表（parentId为0或null的）
-     *
-     * @return 根目录文件列表
-     */
-    default List<SqlEditDO> selectListRoot() {
-        return selectList(new LambdaQueryWrapperX<SqlEditDO>()
-                .or().isNull(SqlEditDO::getParentId)
-                .or().eq(SqlEditDO::getParentId, 0L)
-                .orderByAsc(SqlEditDO::getSort));
-    }
-
+  /**
+   * 获取根目录文件列表（parentId为0或null的）
+   *
+   * @return 根目录文件列表
+   */
+  default List<SqlEditDO> selectListRoot() {
+    return selectList(
+        new LambdaQueryWrapperX<SqlEditDO>()
+            .or()
+            .isNull(SqlEditDO::getParentId)
+            .or()
+            .eq(SqlEditDO::getParentId, 0L)
+            .orderByAsc(SqlEditDO::getSort));
+  }
 }

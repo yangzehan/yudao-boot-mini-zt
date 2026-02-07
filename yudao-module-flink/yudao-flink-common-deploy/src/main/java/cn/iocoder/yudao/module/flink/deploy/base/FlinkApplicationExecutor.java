@@ -1,10 +1,10 @@
 package cn.iocoder.yudao.module.flink.deploy.base;
 
 import cn.iocoder.yudao.module.flink.common.enums.JobTypeEnum;
-import cn.iocoder.yudao.module.flink.deploy.FlinkJobLocalDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.constant.NacosConstant;
 import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployer;
 import cn.iocoder.yudao.module.flink.deploy.deployer.DataIngestionDeployerImpl;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobLocalDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalDataIngestionParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalSqlParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployRemoteJarParam;

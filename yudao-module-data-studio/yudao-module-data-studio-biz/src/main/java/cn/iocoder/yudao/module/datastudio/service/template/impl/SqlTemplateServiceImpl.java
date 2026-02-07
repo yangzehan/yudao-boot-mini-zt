@@ -6,7 +6,7 @@ import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
-import cn.iocoder.yudao.module.datastudio.controller.admin.file.vo.save.SqlEditSaveReqVO;
+import cn.iocoder.yudao.module.datastudio.controller.admin.sql.vo.save.SqlEditSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.template.vo.SqlTemplateSaveReqVO;
 import cn.iocoder.yudao.module.datastudio.controller.admin.template.vo.req.*;
 import cn.iocoder.yudao.module.datastudio.controller.admin.template.vo.resp.SqlTemplateRespVO;

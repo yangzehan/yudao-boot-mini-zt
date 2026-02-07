@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.flink.deploy;
 import cn.hutool.json.JSONUtil;
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
 import cn.iocoder.yudao.module.flink.deploy.base.FlinkApplicationExecutor;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobLocalDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalDataIngestionParam;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ public class FlinkApplicationExecutorTest {
    *
    * <p>该测试方法验证 Flink 本地执行器能否正确执行 MySQL 到 Doris 的数据同步作业。 测试参数来源于前端传递的 JSON 配置。
    *
-   * <p>测试内容： - MySQL 源表：127.0.0.1:3306 上的 ruoyi-vue-pro-2 数据库 - Doris 目标：127.0.0.1:8035
+   * <p>测试内容： - MySQL 源表：127.0.0.1:3306 上的 ruoyi-vue-pro 数据库 - Doris 目标：127.0.0.1:8035
    *
    * @see FlinkJobLocalDeployerImpl#(DeployLocalDataIngestionParam)
    */
@@ -50,7 +51,7 @@ public class FlinkApplicationExecutorTest {
             + "  port: 3306\n"
             + "  username: root\n"
             + "  password: mysql_dsEsnN\n"
-            + "  tables: ruoyi-vue-pro-2.\\.*\n"
+            + "  tables: ruoyi-vue-pro.\\.*\n"
             + "  jdbc.properties.allowPublicKeyRetrieval: true\n"
             + "\n"
             + "sink:\n"
@@ -95,7 +96,7 @@ public class FlinkApplicationExecutorTest {
             + "  port: 3306\n"
             + "  username: root\n"
             + "  password: mysql_dsEsnN\n"
-            + "  tables: ruoyi-vue-pro-2.\\.*\n"
+            + "  tables: ruoyi-vue-pro.\\.*\n"
             + "  jdbc.properties.allowPublicKeyRetrieval: true\n"
             + "\n"
             + "sink:\n"

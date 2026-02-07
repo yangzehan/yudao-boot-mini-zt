@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.flink.deploy;
 
 import cn.iocoder.yudao.module.flink.common.dto.JobDeployRespDto;
+import cn.iocoder.yudao.module.flink.deploy.deployer.FlinkJobLocalDeployerImpl;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalJarParam;
 import cn.iocoder.yudao.module.flink.deploy.param.DeployLocalSqlParam;
 import org.apache.flink.configuration.Configuration;

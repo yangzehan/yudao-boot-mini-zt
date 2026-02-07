@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.flink.v118;
 
 import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import cn.iocoder.yudao.module.flink.deploy.constant.NacosConstant;
+import java.lang.reflect.Field;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -41,5 +42,13 @@ public class Flink118Application {
         SpringUtils.getProperty("spring.cloud.nacos.discovery.namespace"));
     NacosConstant.setDiscoveryServerAddr(
         SpringUtils.getProperty("spring.cloud.nacos.discovery.server-addr"));
+
+    try {
+      Field scl = ClassLoader.class.getDeclaredField("scl");
+      scl.setAccessible(true);
+      scl.set(null, Thread.currentThread().getContextClassLoader());
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

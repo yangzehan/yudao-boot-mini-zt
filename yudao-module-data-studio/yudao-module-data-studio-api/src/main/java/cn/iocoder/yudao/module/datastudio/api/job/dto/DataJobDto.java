@@ -18,4 +18,14 @@ public class DataJobDto {
   @NonNull private String jobId;
   @NonNull private String webUiUrl;
   @Nullable private String flinkClusterId;
+
+  // ========== YARN Application 模式监控所需字段 ==========
+  /** 集群ID，用于关联查询 FlinkClusterDO */
+  @Nullable private Long clusterId;
+  /** YARN 配置文件路径 (yarn-site.xml) */
+  @Nullable private String yarnSitePath;
+  /** HDFS 配置文件路径 (hdfs-site.xml) */
+  @Nullable private String hdfsSitePath;
+  /** Core 配置文件路径 (core-site.xml) */
+  @Nullable private String coreSitePath;
 }

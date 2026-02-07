@@ -72,6 +72,10 @@
                     <artifactId>hadoop-hdfs</artifactId>
                     <groupId>org.apache.hadoop</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -82,9 +86,18 @@
                     <artifactId>servlet-api</artifactId>
                     <groupId>javax.servlet</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-reload4j</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
             </exclusions>
             <groupId>org.apache.hadoop</groupId>
             <version>${flink.hadoop.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
 
         <dependency>
@@ -94,9 +107,14 @@
                     <artifactId>servlet-api</artifactId>
                     <groupId>javax.servlet</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
             </exclusions>
             <groupId>org.apache.hadoop</groupId>
             <version>${flink.hadoop.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
 
         <dependency>
@@ -106,9 +124,14 @@
                     <artifactId>servlet-api</artifactId>
                     <groupId>javax.servlet</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
             </exclusions>
             <groupId>org.apache.hadoop</groupId>
             <version>${flink.hadoop.version}</version>
+            <scope>${flink.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -243,9 +266,6 @@
                         <includes>
                             <include>cn.iocoder.boot:yudao-flink-common</include>
                             <include>cn.iocoder.boot:yudao-common</include>
-                            <include>org.apache.flink:flink-cdc-composer:*</include>
-                            <include>org.apache.flink:flink-cdc-common:*</include>
-                            <include>org.apache.flink:flink-cdc-cli:*</include>
                         </includes>
                     </artifactSet>
                 </configuration>

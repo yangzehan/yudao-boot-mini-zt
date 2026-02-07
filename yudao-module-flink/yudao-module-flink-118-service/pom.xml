@@ -97,6 +97,22 @@
                 <version>${spring.boot.version}</version>
                 <executions>
                     <execution>
+                        <configuration>
+                            <excludes>
+                                <exclude>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                </exclude>
+                                <exclude>
+                                    <groupId>org.mapstruct</groupId>
+                                    <artifactId>mapstruct-jdk8</artifactId>
+                                </exclude>
+                                <exclude>
+                                    <groupId>mysql</groupId>
+                                    <artifactId>mysql-connector-java</artifactId>
+                                </exclude>
+                            </excludes>
+                        </configuration>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
