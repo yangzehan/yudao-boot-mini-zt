@@ -820,6 +820,8 @@ logging:
 
 ### 开发规范
 
+** 请加载 @springboot-tdd skill **
+
 1. **代码风格**: 遵循 Google Java Style Guide
 2. **提交信息**: 使用中文，描述清晰
 3. **测试覆盖**: 新增功能必须包含测试

@@ -1,4 +1,9 @@
 ### 请求 /system/mail-template/send-mail 接口 => 成功
+< {%
+    request.variables.set("baseUrl", "http://localhost:8089")
+    request.variables.set("adminTenantId", "1")
+    request.variables.set("token", "test1")
+%}
 POST {{baseUrl}}/system/mail-template/send-mail
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -12,3 +17,6 @@ tenant-id: {{adminTenantId}}
     "key02": "value02"
   }
 }
+
+
+
